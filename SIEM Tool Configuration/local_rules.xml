@@ -1,0 +1,18 @@
+<group name="local,">
+  <!-- Custom rule for multiple failed logins -->
+  <rule id="100001" level="10">
+    <if_matched_sid>5503</if_matched_sid>
+    <same_source_ip />
+    <description>Multiple failed login attempts from same source</description>
+    <group>authentication_failures,</group>
+  </rule>
+  
+  <!-- Custom rule for file modifications in /etc -->
+  <rule id="100002" level="7">
+    <category>ossec</category>
+    <decoded_as>syscheck_new_entry</decoded_as>
+    <match>/etc</match>
+    <description>New file created in /etc directory</description>
+    <group>syscheck,</group>
+  </rule>
+</group>
