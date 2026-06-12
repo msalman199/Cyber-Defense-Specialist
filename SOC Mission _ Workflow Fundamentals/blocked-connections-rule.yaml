@@ -1,0 +1,30 @@
+name: Blocked Network Connections
+type: frequency
+index: soc-logs-*
+num_events: 5
+timeframe:
+  minutes: 10
+
+filter:
+- terms:
+    message: ["UFW BLOCK", "DENIED"]
+
+alert:
+- "debug"
+
+alert_text: |
+  Multiple blocked network connections detected!
+  
+  Time: {0}
+  Message: {1}
+  
+  This could indicate a network scan or attack attempt.
+
+alert_text_args:
+  - "@timestamp"
+  - "message"
+
+include:
+  - "@timestamp"
+  - "host"
+  - "message"
