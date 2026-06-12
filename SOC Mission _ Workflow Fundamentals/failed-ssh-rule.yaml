@@ -1,0 +1,37 @@
+name: Failed SSH Login Attempts
+type: frequency
+index: soc-logs-*
+num_events: 3
+timeframe:
+  minutes: 5
+
+filter:
+- terms:
+    message: ["Failed password", "authentication failure"]
+
+alert:
+- "email"
+- "debug"
+
+email:
+- "soc-admin@company.com"
+
+alert_text: |
+  Multiple failed SSH login attempts detected!
+  
+  Time: {0}
+  Host: {1}
+  Message: {2}
+  
+  This could indicate a brute force attack.
+
+alert_text_args:
+  - "@timestamp"
+  - "host"
+  - "message"
+
+include:
+  - "@timestamp"
+  - "host"
+  - "message"
+  - "program"
