@@ -1,0 +1,373 @@
+SIEM Tool Configuration
+Lab Objectives
+By the end of this lab, students will be able to:
+
+Understand the fundamentals of Security Information and Event Management (SIEM) systems
+Install and configure Wazuh SIEM agent on a Linux machine
+Set up Wazuh to collect system logs and security events
+Configure basic log analysis and monitoring rules
+Generate and analyze security alerts using Wazuh dashboard
+Implement basic threat detection capabilities on a single Linux system
+Prerequisites
+Before starting this lab, students should have:
+
+Basic understanding of Linux command line operations
+Familiarity with system logs and log file locations
+Basic knowledge of cybersecurity concepts
+Understanding of network protocols (TCP/IP basics)
+No prior SIEM experience required - this lab starts from the beginning
+Lab Environment
+Al Nafi Cloud Machine Setup: This lab uses Al Nafi's pre-configured Linux-based cloud machines. Simply click Start Lab to access your dedicated Ubuntu 20.04 LTS machine with all necessary permissions and network access. No need to build your own virtual machine or configure additional systems.
+
+System Requirements:
+
+Ubuntu 20.04 LTS (provided by Al Nafi)
+Minimum 4GB RAM
+20GB available disk space
+Internet connectivity for package downloads
+Task 1: Install Wazuh Manager and Agent on Linux Machine
+Subtask 1.1: System Preparation and Updates
+First, we need to prepare our Linux system and install necessary dependencies.
+
+Update the system packages:
+sudo apt update && sudo apt upgrade -y
+Install required dependencies:
+sudo apt install curl apt-transport-https lsb-release gnupg2 software-properties-common -y
+Check system information:
+uname -a
+cat /etc/os-release
+Subtask 1.2: Install Wazuh Repository
+Add Wazuh GPG key:
+curl -s https://packages.wazuh.com/key/GPG-KEY-WAZUH | gpg --no-default-keyring --keyring gnupg-ring:/usr/share/keyrings/wazuh.gpg --import && chmod 644 /usr/share/keyrings/wazuh.gpg
+Add Wazuh repository:
+echo "deb [signed-by=/usr/share/keyrings/wazuh.gpg] https://packages.wazuh.com/4.x/apt/ stable main" | sudo tee -a /etc/apt/sources.list.d/wazuh.list
+Update package information:
+sudo apt update
+Subtask 1.3: Install Wazuh Manager
+Install Wazuh Manager:
+sudo apt install wazuh-manager -y
+Enable and start Wazuh Manager service:
+sudo systemctl daemon-reload
+sudo systemctl enable wazuh-manager
+sudo systemctl start wazuh-manager
+Verify Wazuh Manager status:
+sudo systemctl status wazuh-manager
+Subtask 1.4: Install Wazuh Agent on Same Machine
+For this lab, we'll install the Wazuh agent on the same machine to monitor local system activities.
+
+Install Wazuh Agent:
+sudo apt install wazuh-agent -y
+Configure the agent to connect to local manager:
+sudo sed -i 's/<server>.*<\/server>/<server>127.0.0.1<\/server>/' /var/ossec/etc/ossec.conf
+Set agent name and group:
+echo "WAZUH_MANAGER='127.0.0.1'" | sudo tee /var/ossec/etc/preloaded-vars.conf
+echo "WAZUH_AGENT_NAME='local-agent'" | sudo tee -a /var/ossec/etc/preloaded-vars.conf
+echo "WAZUH_AGENT_GROUP='default'" | sudo tee -a /var/ossec/etc/preloaded-vars.conf
+Enable and start Wazuh Agent:
+sudo systemctl daemon-reload
+sudo systemctl enable wazuh-agent
+sudo systemctl start wazuh-agent
+Verify agent status:
+sudo systemctl status wazuh-agent
+Task 2: Set up Wazuh to Collect and Analyze Logs
+Subtask 2.1: Install Elasticsearch for Log Storage
+Install Java (required for Elasticsearch):
+sudo apt install openjdk-11-jdk -y
+Add Elasticsearch repository:
+wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo gpg --dearmor -o /usr/share/keyrings/elasticsearch-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee /etc/apt/sources.list.d/elastic-7.x.list
+Update and install Elasticsearch:
+sudo apt update
+sudo apt install elasticsearch=7.17.13 -y
+Configure Elasticsearch:
+sudo tee /etc/elasticsearch/elasticsearch.yml > /dev/null <<EOF
+network.host: 127.0.0.1
+http.port: 9200
+cluster.initial_master_nodes: ["node-1"]
+node.name: node-1
+cluster.name: wazuh-cluster
+discovery.type: single-node
+EOF
+Enable and start Elasticsearch:
+sudo systemctl daemon-reload
+sudo systemctl enable elasticsearch
+sudo systemctl start elasticsearch
+Subtask 2.2: Install Kibana for Visualization
+Install Kibana:
+sudo apt install kibana=7.17.13 -y
+Configure Kibana:
+sudo tee /etc/kibana/kibana.yml > /dev/null <<EOF
+server.host: "127.0.0.1"
+server.port: 5601
+elasticsearch.hosts: ["http://127.0.0.1:9200"]
+EOF
+Enable and start Kibana:
+sudo systemctl daemon-reload
+sudo systemctl enable kibana
+sudo systemctl start kibana
+Subtask 2.3: Install Wazuh Kibana Plugin
+Install Wazuh Kibana plugin:
+sudo -u kibana /usr/share/kibana/bin/kibana-plugin install https://packages.wazuh.com/4.x/ui/kibana/wazuh_kibana-4.5.4_7.17.13-1.zip
+Restart Kibana to load the plugin:
+sudo systemctl restart kibana
+Subtask 2.4: Configure Log Collection
+Configure Wazuh to monitor system logs:
+sudo tee -a /var/ossec/etc/ossec.conf > /dev/null <<EOF
+
+<!-- Additional log monitoring -->
+<localfile>
+  <log_format>syslog</log_format>
+  <location>/var/log/auth.log</location>
+</localfile>
+
+<localfile>
+  <log_format>syslog</log_format>
+  <location>/var/log/syslog</location>
+</localfile>
+
+<localfile>
+  <log_format>apache</log_format>
+  <location>/var/log/apache2/access.log</location>
+</localfile>
+
+<localfile>
+  <log_format>apache</log_format>
+  <location>/var/log/apache2/error.log</location>
+</localfile>
+
+<!-- File integrity monitoring -->
+<syscheck>
+  <directories check_all="yes">/etc,/usr/bin,/usr/sbin</directories>
+  <directories check_all="yes">/bin,/sbin</directories>
+  <directories check_all="yes" realtime="yes">/home</directories>
+</syscheck>
+
+<!-- Rootcheck -->
+<rootcheck>
+  <rootkit_files>/var/ossec/etc/rootcheck/rootkit_files.txt</rootkit_files>
+  <rootkit_trojans>/var/ossec/etc/rootcheck/rootkit_trojans.txt</rootkit_trojans>
+  <system_audit>/var/ossec/etc/rootcheck/system_audit_rcl.txt</system_audit>
+  <system_audit>/var/ossec/etc/rootcheck/cis_debian_linux_rcl.txt</system_audit>
+</rootcheck>
+EOF
+Restart Wazuh Manager to apply configuration:
+sudo systemctl restart wazuh-manager
+Restart Wazuh Agent:
+sudo systemctl restart wazuh-agent
+Subtask 2.5: Verify Services and Connectivity
+Check all services are running:
+sudo systemctl status wazuh-manager
+sudo systemctl status wazuh-agent
+sudo systemctl status elasticsearch
+sudo systemctl status kibana
+Test Elasticsearch connectivity:
+curl -X GET "127.0.0.1:9200/_cluster/health?pretty"
+Wait for Kibana to fully start (this may take 2-3 minutes):
+echo "Waiting for Kibana to start..."
+sleep 180
+curl -I http://127.0.0.1:5601
+Check Wazuh agent connection:
+sudo /var/ossec/bin/agent_control -l
+Task 3: Generate Test Events and Analyze Logs
+Subtask 3.1: Generate Security Events
+Create failed login attempts:
+# Attempt to login with wrong password (this will fail and generate logs)
+echo "Generating failed login events..."
+for i in {1..5}; do
+  echo "wrong_password" | su - nonexistent_user 2>/dev/null || true
+  sleep 2
+done
+Create file integrity monitoring events:
+# Create and modify files in monitored directories
+sudo touch /etc/test_file_$(date +%s)
+sudo echo "test content" > /tmp/test_modification
+sudo mv /tmp/test_modification /etc/
+Generate network activity:
+# Generate some network connections
+curl -s http://httpbin.org/ip > /dev/null
+ping -c 3 8.8.8.8 > /dev/null
+Subtask 3.2: Access Wazuh Dashboard
+Open web browser and navigate to Kibana:
+
+URL: http://127.0.0.1:5601
+If using a remote connection, replace 127.0.0.1 with your machine's IP address
+Configure Wazuh plugin:
+
+Click on "Wazuh" in the left sidebar
+Add API connection with these settings:
+URL: https://127.0.0.1
+Port: 55000
+Username: wazuh
+Password: wazuh
+Subtask 3.3: Analyze Generated Events
+View security events in Wazuh dashboard:
+
+Navigate to "Security Events" section
+Filter events by time range (last 1 hour)
+Look for authentication failures and file integrity alerts
+Create custom rules for analysis:
+
+sudo tee /var/ossec/etc/rules/local_rules.xml > /dev/null <<EOF
+<group name="local,">
+  <!-- Custom rule for multiple failed logins -->
+  <rule id="100001" level="10">
+    <if_matched_sid>5503</if_matched_sid>
+    <same_source_ip />
+    <description>Multiple failed login attempts from same source</description>
+    <group>authentication_failures,</group>
+  </rule>
+  
+  <!-- Custom rule for file modifications in /etc -->
+  <rule id="100002" level="7">
+    <category>ossec</category>
+    <decoded_as>syscheck_new_entry</decoded_as>
+    <match>/etc</match>
+    <description>New file created in /etc directory</description>
+    <group>syscheck,</group>
+  </rule>
+</group>
+EOF
+Restart Wazuh Manager to load new rules:
+sudo systemctl restart wazuh-manager
+Subtask 3.4: Monitor Real-time Alerts
+Monitor Wazuh alerts in real-time:
+sudo tail -f /var/ossec/logs/alerts/alerts.log
+Generate more test events while monitoring:
+# In another terminal, generate more events
+sudo touch /etc/another_test_file
+echo "test" | sudo tee /etc/test_config_change
+Check agent statistics:
+sudo /var/ossec/bin/agent_control -s
+Task 4: Configure Advanced Monitoring
+Subtask 4.1: Set up Active Response
+Configure active response for failed logins:
+sudo tee -a /var/ossec/etc/ossec.conf > /dev/null <<EOF
+
+<!-- Active Response Configuration -->
+<active-response>
+  <disabled>no</disabled>
+  <command>firewall-drop</command>
+  <location>local</location>
+  <rules_id>100001</rules_id>
+  <timeout>300</timeout>
+</active-response>
+EOF
+Restart Wazuh Manager:
+sudo systemctl restart wazuh-manager
+Subtask 4.2: Configure Email Alerts
+Configure email notifications:
+sudo tee -a /var/ossec/etc/ossec.conf > /dev/null <<EOF
+
+<!-- Email notification configuration -->
+<global>
+  <email_notification>yes</email_notification>
+  <smtp_server>localhost</smtp_server>
+  <email_from>wazuh@localhost</email_from>
+  <email_to>admin@localhost</email_to>
+</global>
+
+<email_alerts>
+  <email_to>admin@localhost</email_to>
+  <level>10</level>
+  <do_not_delay />
+</email_alerts>
+EOF
+Subtask 4.3: Test Complete SIEM Functionality
+Generate comprehensive test scenario:
+#!/bin/bash
+echo "Running comprehensive SIEM test..."
+
+# Generate authentication events
+for i in {1..3}; do
+  echo "wrong_password" | su - testuser 2>/dev/null || true
+  sleep 1
+done
+
+# Generate file integrity events
+sudo touch /etc/critical_file_$(date +%s)
+sudo chmod 777 /etc/passwd 2>/dev/null || true
+sudo chmod 644 /etc/passwd
+
+# Generate network events
+nmap -sS 127.0.0.1 -p 22,80,443 > /dev/null 2>&1 || true
+
+echo "Test events generated. Check Wazuh dashboard for alerts."
+Save and run the test script:
+chmod +x test_siem.sh
+./test_siem.sh
+Verify all components are working:
+# Check service status
+sudo systemctl status wazuh-manager wazuh-agent elasticsearch kibana
+
+# Check log processing
+sudo tail -20 /var/ossec/logs/ossec.log
+
+# Check alerts generated
+sudo tail -10 /var/ossec/logs/alerts/alerts.log
+Troubleshooting Common Issues
+Issue 1: Services Not Starting
+Problem: Wazuh services fail to start Solution:
+
+# Check system resources
+free -h
+df -h
+
+# Check service logs
+sudo journalctl -u wazuh-manager -f
+sudo journalctl -u elasticsearch -f
+Issue 2: Agent Not Connecting
+Problem: Wazuh agent cannot connect to manager Solution:
+
+# Check agent configuration
+sudo cat /var/ossec/etc/ossec.conf | grep -A 5 -B 5 server
+
+# Restart agent
+sudo systemctl restart wazuh-agent
+
+# Check connectivity
+sudo netstat -tlnp | grep 1514
+Issue 3: Kibana Not Accessible
+Problem: Cannot access Kibana dashboard Solution:
+
+# Check Kibana status and logs
+sudo systemctl status kibana
+sudo journalctl -u kibana -f
+
+# Verify port binding
+sudo netstat -tlnp | grep 5601
+
+# Check Elasticsearch connectivity
+curl -X GET "127.0.0.1:9200/_cluster/health"
+Lab Verification Checklist
+Before completing the lab, verify the following:
+
+ Wazuh Manager is running and processing logs
+ Wazuh Agent is connected and sending data
+ Elasticsearch is storing log data
+ Kibana dashboard is accessible at http://127.0.0.1:5601
+ Security events are being generated and detected
+ Custom rules are working correctly
+ File integrity monitoring is active
+ Authentication monitoring is functional
+ Alerts are being generated for security events
+Conclusion
+In this comprehensive lab, you have successfully:
+
+Installed and configured a complete SIEM solution using Wazuh on a single Linux machine
+Set up log collection and analysis for system security events, authentication logs, and file integrity monitoring
+Generated and analyzed security events to understand how SIEM tools detect threats
+Configured custom rules and alerts to enhance threat detection capabilities
+Implemented real-time monitoring with dashboard visualization
+Why This Matters: SIEM tools like Wazuh are critical components of modern cybersecurity infrastructure. They provide centralized log management, real-time threat detection, and incident response capabilities. Understanding how to configure and operate SIEM systems is essential for cybersecurity professionals, as these tools help organizations detect, analyze, and respond to security threats before they cause significant damage.
+
+Key Skills Developed:
+
+SIEM installation and configuration
+Log analysis and correlation
+Security event detection
+Custom rule creation
+Real-time monitoring and alerting
+Incident response preparation
+This hands-on experience with Wazuh provides a solid foundation for working with enterprise SIEM solutions and prepares you for advanced cybersecurity roles where log analysis and threat detection are critical responsibilities.
+
+Next Steps: Consider exploring advanced Wazuh features such as vulnerability detection, compliance monitoring, and integration with threat intelligence feeds to further enhance your SIEM capabilities.
