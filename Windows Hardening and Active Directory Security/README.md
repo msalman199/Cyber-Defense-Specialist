@@ -54,17 +54,18 @@ Al Nafi provides Linux-based cloud machines with PowerShell Core pre-installed.
 
 # 🧩 Task 1: Active Directory Security Automation
 
----
-
 ## 📁 Step 1: Create Lab Directory Structure
 
 ```bash
-mkdir -p ~/ad-security-lab/{scripts,configs,logs}
+mkdir -p ~/ad-security-lab/{scripts,configs/registry,logs}
 cd ~/ad-security-lab
-⚙️ Step 2: Create AD Configuration File
+```
 
-📄 configs/ad-config.json
+## ⚙️ Step 2: Create AD Configuration File
 
+📄 `configs/ad-config.json`
+
+```json
 {
   "domain": "company.local",
   "users": [
@@ -87,10 +88,13 @@ cd ~/ad-security-lab
     }
   }
 }
-⚡ Step 3: AD Security Automation Script
+```
 
-📄 scripts/ad-security-automation.ps1
+## ⚡ Step 3: AD Security Automation Script
 
+📄 `scripts/ad-security-automation.ps1`
+
+```powershell
 #!/usr/bin/env pwsh
 
 param(
@@ -122,14 +126,24 @@ try {
 } catch {
     Write-SecurityLog "❌ Error: $($_.Exception.Message)" "ERROR"
 }
-▶️ Step 4: Execute Script
+```
+
+## ▶️ Step 4: Execute Script
+
+```bash
 chmod +x scripts/ad-security-automation.ps1
 pwsh scripts/ad-security-automation.ps1
-🔐 Task 2: Registry Security Hardening
-🧾 Step 5: Registry Configuration
+```
 
-📄 configs/registry/security-registry.json
+---
 
+# 🔐 Task 2: Registry Security Hardening
+
+## 🧾 Step 5: Registry Configuration
+
+📄 `configs/registry/security-registry.json`
+
+```json
 {
   "registry_security_settings": {
     "HKLM": {
@@ -146,10 +160,13 @@ pwsh scripts/ad-security-automation.ps1
     }
   }
 }
-🛠️ Step 6: Registry Hardening Script
+```
 
-📄 scripts/registry-hardening.ps1
+## 🛠️ Step 6: Registry Hardening Script
 
+📄 `scripts/registry-hardening.ps1`
+
+```powershell
 #!/usr/bin/env pwsh
 
 param(
@@ -173,13 +190,23 @@ try {
 } catch {
     Write-RegistryLog "❌ Error: $($_.Exception.Message)"
 }
-▶️ Step 7: Run Hardening
+```
+
+## ▶️ Step 7: Run Hardening
+
+```bash
 pwsh scripts/registry-hardening.ps1
-📊 Task 3: Security Monitoring System
-📡 Step 8: Security Monitor Script
+```
 
-📄 scripts/security-monitor.ps1
+---
 
+# 📊 Task 3: Security Monitoring System
+
+## 📡 Step 8: Security Monitor Script
+
+📄 `scripts/security-monitor.ps1`
+
+```powershell
 #!/usr/bin/env pwsh
 
 param(
@@ -200,10 +227,13 @@ try {
 } catch {
     Write-Host "❌ Error: $($_.Exception.Message)"
 }
-📄 Step 9: HTML Report Generator
+```
 
-📄 scripts/generate-report.ps1
+## 📄 Step 9: HTML Report Generator
 
+📄 `scripts/generate-report.ps1`
+
+```powershell
 #!/usr/bin/env pwsh
 
 function New-HTMLSecurityReport {
@@ -243,30 +273,46 @@ function New-HTMLSecurityReport {
 }
 
 New-HTMLSecurityReport
-▶️ Step 10: Final Execution
+```
+
+## ▶️ Step 10: Final Execution
+
+```bash
 pwsh scripts/ad-security-automation.ps1
 pwsh scripts/registry-hardening.ps1
 pwsh scripts/generate-report.ps1
-📁 Expected Output Files
+```
+
+---
+
+## 📁 Expected Output Files
+
+```text
 logs/
  ├── ad-security.log
  ├── registry-hardening.log
  ├── security-summary.json
  ├── registry-hardening-report.json
  └── security-report.html
-🧠 Key Takeaways
-⚙️ PowerShell enables enterprise Windows automation
-🔐 Registry hardening improves OS security posture
-📊 Monitoring ensures continuous compliance
-📑 Reporting supports audits and governance
-🧰 Automation reduces human security errors
-🚀 Conclusion
+```
+
+---
+
+## 🧠 Key Takeaways
+
+- ⚙️ PowerShell enables enterprise Windows automation
+- 🔐 Registry hardening improves OS security posture
+- 📊 Monitoring ensures continuous compliance
+- 📑 Reporting supports audits and governance
+- 🧰 Automation reduces human security errors
+
+---
+
+## 🚀 Conclusion
 
 This lab teaches real-world Windows security hardening + Active Directory automation skills used in enterprise environments.
 
 Keep extending scripts with:
-
-MFA policy checks
-Event log monitoring
-SIEM integration
-Advanced compliance scoring
+- MFA policy checks
+- Event log monitoring
+- SIEM integration
