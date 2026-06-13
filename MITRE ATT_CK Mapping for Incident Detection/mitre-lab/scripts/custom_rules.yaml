@@ -1,0 +1,17 @@
+# Custom Detection Rules
+# Students: Add your own detection rules here
+
+rules:
+  - id: "CUSTOM_001"
+    technique_id: "T1059.001"
+    name: "Suspicious PowerShell Execution"
+    description: "Detects obfuscated PowerShell commands"
+    patterns:
+      - "powershell.*-windowstyle hidden"
+      - "powershell.*-noprofile"
+    severity: "HIGH"
+    log_types: ["windows_security"]
+    
+  # TODO: Add rule for file deletion (T1070.004)
+  # TODO: Add rule for process injection (T1055)
+  # TODO: Add rule for scheduled tasks (T1053.005)
