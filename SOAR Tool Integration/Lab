@@ -1,0 +1,777 @@
+SOAR Tool Integration
+Objectives
+By the end of this lab, students will be able to:
+
+Install and configure open-source SOAR tools (TheHive and Cortex)
+Integrate SOAR platforms with Wazuh SIEM for automated incident response
+Create automated playbooks for common security incidents
+Implement workflow orchestration for security event handling
+Test and validate automated response actions
+Prerequisites
+Basic Linux command line proficiency
+Understanding of security incident response concepts
+Familiarity with SIEM systems and log analysis
+Basic Python scripting knowledge
+Understanding of JSON and YAML formats
+Lab Environment
+This lab uses a pre-configured Ubuntu 20.04 LTS cloud machine with Docker and required dependencies installed. Click Start Lab to access your environment. All services will run in Docker containers for easy management and isolation.
+
+Task 1: Install and Configure SOAR Components
+Step 1: Update System and Verify Docker
+# Update system packages
+sudo apt update && sudo apt upgrade -y
+
+# Verify Docker installation
+docker --version
+docker-compose --version
+
+# Ensure Docker service is running
+sudo systemctl status docker
+Step 2: Deploy Wazuh SIEM
+# Create Wazuh directory
+mkdir -p ~/wazuh-soar-lab && cd ~/wazuh-soar-lab
+
+# Download Wazuh Docker Compose configuration
+curl -so docker-compose.yml https://raw.githubusercontent.com/wazuh/wazuh-docker/v4.7.0/single-node/docker-compose.yml
+
+# Start Wazuh services
+docker-compose up -d
+
+# Wait for services to initialize (5-10 minutes)
+sleep 300
+
+# Verify services are running
+docker-compose ps
+Note: Default Wazuh credentials are admin:admin. Access the web interface at https://localhost:443.
+
+Step 3: Deploy TheHive Case Management Platform
+# Create TheHive directory
+mkdir -p ~/thehive-soar && cd ~/thehive-soar
+
+# Create Docker Compose configuration
+cat > docker-compose.yml << 'EOF'
+version: '3.8'
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.9
+    environment:
+      - discovery.type=single-node
+      - cluster.name=hive
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms256m -Xmx256m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+
+  thehive:
+    image: thehiveproject/thehive4:4.1.24-1
+    depends_on:
+      - elasticsearch
+    ports:
+      - "9000:9000"
+    volumes:
+      - thehive_data:/opt/thp/thehive/data
+    command: '--no-config --no-config-secret'
+
+volumes:
+  es_data:
+  thehive_data:
+EOF
+
+# Start TheHive services
+docker-compose up -d
+
+# Wait for initialization
+sleep 120
+
+# Check service status
+docker-compose ps
+Note: Access TheHive at http://localhost:9000. Initial setup will prompt for admin user creation.
+
+Step 4: Deploy Cortex Analysis Engine
+# Create Cortex directory
+mkdir -p ~/cortex-soar && cd ~/cortex-soar
+
+# Create Docker Compose configuration
+cat > docker-compose.yml << 'EOF'
+version: '3.8'
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.9
+    environment:
+      - discovery.type=single-node
+      - cluster.name=cortex
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms256m -Xmx256m"
+    ports:
+      - "9201:9200"
+    volumes:
+      - cortex_es_data:/usr/share/elasticsearch/data
+
+  cortex:
+    image: thehiveproject/cortex:3.1.7-1
+    depends_on:
+      - elasticsearch
+    ports:
+      - "9001:9001"
+    volumes:
+      - cortex_jobs:/tmp/cortex-jobs
+    environment:
+      - 'JOB_DIRECTORY=/tmp/cortex-jobs'
+
+volumes:
+  cortex_es_data:
+  cortex_jobs:
+EOF
+
+# Start Cortex services
+docker-compose up -d
+
+# Wait for initialization
+sleep 90
+
+# Verify deployment
+docker-compose ps
+Note: Access Cortex at http://localhost:9001.
+
+Task 2: Create SOAR Integration Framework
+Step 1: Set Up Integration Directory Structure
+# Create project structure
+mkdir -p ~/soar-integration/{connectors,playbooks,workflows,logs}
+cd ~/soar-integration
+
+# Install required Python packages
+pip3 install requests urllib3 pyyaml
+Step 2: Create Wazuh API Connector (Starter Template)
+Create connectors/wazuh_connector.py:
+
+#!/usr/bin/env python3
+import requests
+import logging
+from requests.auth import HTTPBasicAuth
+import urllib3
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+class WazuhConnector:
+    """
+    Connector for Wazuh SIEM API integration.
+    Handles authentication and alert retrieval.
+    """
+    
+    def __init__(self, url: str, username: str, password: str):
+        """
+        Initialize Wazuh connector.
+        
+        Args:
+            url: Wazuh API URL (e.g., https://localhost:55000)
+            username: API username
+            password: API password
+        """
+        self.url = url
+        self.username = username
+        self.password = password
+        self.token = None
+        
+    def authenticate(self) -> bool:
+        """
+        Authenticate with Wazuh API and obtain JWT token.
+        
+        Returns:
+            bool: True if authentication successful, False otherwise
+        """
+        # TODO: Implement authentication logic
+        # TODO: Store JWT token in self.token
+        # TODO: Handle authentication errors
+        pass
+    
+    def get_alerts(self, limit: int = 10, min_level: int = 0) -> list:
+        """
+        Retrieve alerts from Wazuh.
+        
+        Args:
+            limit: Maximum number of alerts to retrieve
+            min_level: Minimum alert severity level
+            
+        Returns:
+            list: List of alert dictionaries
+        """
+        # TODO: Implement alert retrieval
+        # TODO: Filter by severity level
+        # TODO: Handle API errors and token refresh
+        pass
+    
+    def get_agent_info(self, agent_id: str) -> dict:
+        """
+        Get information about a specific Wazuh agent.
+        
+        Args:
+            agent_id: Agent identifier
+            
+        Returns:
+            dict: Agent information
+        """
+        # TODO: Implement agent information retrieval
+        pass
+Step 3: Create TheHive API Connector (Starter Template)
+Create connectors/thehive_connector.py:
+
+#!/usr/bin/env python3
+import requests
+import logging
+from datetime import datetime
+
+class TheHiveConnector:
+    """
+    Connector for TheHive case management platform.
+    Handles case creation and management.
+    """
+    
+    def __init__(self, url: str, username: str = None, password: str = None):
+        """
+        Initialize TheHive connector.
+        
+        Args:
+            url: TheHive URL (e.g., http://localhost:9000)
+            username: Optional username for authentication
+            password: Optional password for authentication
+        """
+        self.url = url
+        self.session = None
+        
+    def login(self, username: str, password: str) -> bool:
+        """
+        Login to TheHive and obtain session.
+        
+        Args:
+            username: TheHive username
+            password: TheHive password
+            
+        Returns:
+            bool: True if login successful
+        """
+        # TODO: Implement login logic
+        # TODO: Store session cookie
+        # TODO: Handle login errors
+        pass
+    
+    def create_case(self, title: str, description: str, severity: int = 2, 
+                   tags: list = None) -> str:
+        """
+        Create a new case in TheHive.
+        
+        Args:
+            title: Case title
+            description: Case description
+            severity: Severity level (1-4)
+            tags: List of tags
+            
+        Returns:
+            str: Case ID if successful, None otherwise
+        """
+        # TODO: Implement case creation
+        # TODO: Add default tasks
+        # TODO: Return case ID
+        pass
+    
+    def add_observable(self, case_id: str, data_type: str, data: str) -> bool:
+        """
+        Add an observable to a case.
+        
+        Args:
+            case_id: Case identifier
+            data_type: Observable type (ip, domain, hash, etc.)
+            data: Observable data
+            
+        Returns:
+            bool: True if successful
+        """
+        # TODO: Implement observable addition
+        pass
+    
+    def update_case_status(self, case_id: str, status: str) -> bool:
+        """
+        Update case status.
+        
+        Args:
+            case_id: Case identifier
+            status: New status (Open, Resolved, etc.)
+            
+        Returns:
+            bool: True if successful
+        """
+        # TODO: Implement status update
+        pass
+Task 3: Develop Automated Response Playbooks
+Step 1: Create Malware Detection Playbook (Starter Template)
+Create playbooks/malware_response.py:
+
+#!/usr/bin/env python3
+import logging
+from datetime import datetime
+
+class MalwareResponsePlaybook:
+    """
+    Automated playbook for malware detection incidents.
+    Implements containment and remediation steps.
+    """
+    
+    def __init__(self):
+        self.playbook_name = "Malware Detection Response"
+        self.version = "1.0"
+        
+    def execute(self, alert_data: dict) -> dict:
+        """
+        Execute the malware response playbook.
+        
+        Args:
+            alert_data: Alert information from SIEM
+            
+        Returns:
+            dict: Execution results for each step
+        """
+        # TODO: Execute each playbook step in sequence
+        # TODO: Collect results from each step
+        # TODO: Handle step failures gracefully
+        pass
+    
+    def isolate_host(self, alert_data: dict) -> dict:
+        """
+        Isolate the affected host from the network.
+        
+        Args:
+            alert_data: Alert information
+            
+        Returns:
+            dict: Isolation action results
+        """
+        # TODO: Extract host information from alert
+        # TODO: Execute isolation commands (firewall rules, etc.)
+        # TODO: Log isolation actions
+        # TODO: Return status and actions taken
+        pass
+    
+    def collect_forensics(self, alert_data: dict) -> dict:
+        """
+        Collect forensic artifacts from affected system.
+        
+        Args:
+            alert_data: Alert information
+            
+        Returns:
+            dict: Collected artifacts information
+        """
+        # TODO: Identify artifacts to collect
+        # TODO: Execute collection commands
+        # TODO: Store artifact metadata
+        pass
+    
+    def scan_system(self, alert_data: dict) -> dict:
+        """
+        Perform malware scan on affected system.
+        
+        Args:
+            alert_data: Alert information
+            
+        Returns:
+            dict: Scan results
+        """
+        # TODO: Trigger antivirus/malware scan
+        # TODO: Parse scan results
+        # TODO: Identify threats found
+        pass
+    
+    def update_threat_intel(self, alert_data: dict) -> dict:
+        """
+        Update threat intelligence with IOCs.
+        
+        Args:
+            alert_data: Alert information
+            
+        Returns:
+            dict: Updated IOC information
+        """
+        # TODO: Extract IOCs (hashes, IPs, domains)
+        # TODO: Update threat intelligence feeds
+        # TODO: Share IOCs with security tools
+        pass
+Step 2: Create Brute Force Attack Playbook (Starter Template)
+Create playbooks/bruteforce_response.py:
+
+#!/usr/bin/env python3
+import logging
+from datetime import datetime
+
+class BruteForceResponsePlaybook:
+    """
+    Automated playbook for brute force attack incidents.
+    Implements blocking and analysis steps.
+    """
+    
+    def __init__(self):
+        self.playbook_name = "Brute Force Attack Response"
+        self.version = "1.0"
+        
+    def execute(self, alert_data: dict) -> dict:
+        """
+        Execute the brute force response playbook.
+        
+        Args:
+            alert_data: Alert information from SIEM
+            
+        Returns:
+            dict: Execution results
+        """
+        # TODO: Execute playbook steps
+        # TODO: Aggregate results
+        pass
+    
+    def block_source_ip(self, alert_data: dict) -> dict:
+        """
+        Block the attacking IP address.
+        
+        Args:
+            alert_data: Alert information
+            
+        Returns:
+            dict: Blocking action results
+        """
+        # TODO: Extract source IP from alert
+        # TODO: Add IP to firewall blacklist
+        # TODO: Update IPS/IDS rules
+        pass
+    
+    def analyze_attack_pattern(self, alert_data: dict) -> dict:
+        """
+        Analyze the attack pattern and characteristics.
+        
+        Args:
+            alert_data: Alert information
+            
+        Returns:
+            dict: Analysis results
+        """
+        # TODO: Count attack attempts
+        # TODO: Identify targeted accounts
+        # TODO: Determine attack timeframe
+        # TODO: Assess success rate
+        pass
+    
+    def check_account_compromise(self, alert_data: dict) -> dict:
+        """
+        Check if any accounts were compromised.
+        
+        Args:
+            alert_data: Alert information
+            
+        Returns:
+            dict: Account status information
+        """
+        # TODO: Check for successful logins
+        # TODO: Review account activity
+        # TODO: Identify suspicious behavior
+        pass
+    
+    def enforce_security_policy(self, alert_data: dict) -> dict:
+        """
+        Enforce enhanced security policies.
+        
+        Args:
+            alert_data: Alert information
+            
+        Returns:
+            dict: Policy enforcement results
+        """
+        # TODO: Reduce failed login threshold
+        # TODO: Enable account lockout
+        # TODO: Require password reset if needed
+        pass
+Task 4: Build Workflow Orchestration Engine
+Step 1: Create Workflow Orchestrator (Starter Template)
+Create workflows/orchestrator.py:
+
+#!/usr/bin/env python3
+import sys
+import os
+import logging
+from datetime import datetime
+
+# Add parent directory to path
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+from connectors.wazuh_connector import WazuhConnector
+from connectors.thehive_connector import TheHiveConnector
+from playbooks.malware_response import MalwareResponsePlaybook
+from playbooks.bruteforce_response import BruteForceResponsePlaybook
+
+class WorkflowOrchestrator:
+    """
+    Main orchestration engine for SOAR workflows.
+    Routes alerts to appropriate playbooks and manages execution.
+    """
+    
+    def __init__(self, config: dict):
+        """
+        Initialize the workflow orchestrator.
+        
+        Args:
+            config: Configuration dictionary with connection details
+        """
+        # TODO: Initialize connectors
+        # TODO: Load playbooks
+        # TODO: Set up logging
+        pass
+    
+    def process_alerts(self, poll_interval: int = 60):
+        """
+        Continuously poll for alerts and process them.
+        
+        Args:
+            poll_interval: Seconds between polling cycles
+        """
+        # TODO: Poll Wazuh for new alerts
+        # TODO: Route alerts to appropriate playbooks
+        # TODO: Create cases in TheHive
+        # TODO: Log all actions
+        pass
+    
+    def route_alert(self, alert: dict) -> str:
+        """
+        Determine which playbook should handle the alert.
+        
+        Args:
+            alert: Alert data from SIEM
+            
+        Returns:
+            str: Playbook name to execute
+        """
+        # TODO: Analyze alert type and severity
+        # TODO: Match to appropriate playbook
+        # TODO: Return playbook identifier
+        pass
+    
+    def execute_playbook(self, playbook_name: str, alert: dict) -> dict:
+        """
+        Execute the specified playbook with alert data.
+        
+        Args:
+            playbook_name: Name of playbook to execute
+            alert: Alert data
+            
+        Returns:
+            dict: Playbook execution results
+        """
+        # TODO: Load appropriate playbook
+        # TODO: Execute playbook with alert data
+        # TODO: Handle execution errors
+        # TODO: Return results
+        pass
+    
+    def create_case_from_alert(self, alert: dict, playbook_results: dict) -> str:
+        """
+        Create a case in TheHive from alert and playbook results.
+        
+        Args:
+            alert: Original alert data
+            playbook_results: Results from playbook execution
+            
+        Returns:
+            str: Case ID
+        """
+        # TODO: Format case title and description
+        # TODO: Add observables from alert
+        # TODO: Attach playbook results
+        # TODO: Create case in TheHive
+        pass
+Step 2: Create Configuration File
+Create config.yaml:
+
+# SOAR Integration Configuration
+
+wazuh:
+  url: "https://localhost:55000"
+  username: "wazuh"
+  password: "wazuh"
+  poll_interval: 60
+  min_alert_level: 7
+
+thehive:
+  url: "http://localhost:9000"
+  username: "admin@thehive.local"
+  password: "admin123"
+
+cortex:
+  url: "http://localhost:9001"
+  api_key: ""
+
+playbooks:
+  malware_detection:
+    enabled: true
+    rule_ids: [510, 511, 512, 553, 554]
+    severity: 3
+  
+  brute_force:
+    enabled: true
+    rule_ids: [5710, 5712, 5720]
+    severity: 2
+
+logging:
+  level: "INFO"
+  file: "logs/soar_integration.log"
+Step 3: Create Main Execution Script (Starter Template)
+Create main.py:
+
+#!/usr/bin/env python3
+import yaml
+import logging
+import sys
+from workflows.orchestrator import WorkflowOrchestrator
+
+def setup_logging(config: dict):
+    """
+    Configure logging based on config file.
+    
+    Args:
+        config: Configuration dictionary
+    """
+    # TODO: Set up logging to file and console
+    # TODO: Configure log level from config
+    pass
+
+def load_config(config_file: str = 'config.yaml') -> dict:
+    """
+    Load configuration from YAML file.
+    
+    Args:
+        config_file: Path to configuration file
+        
+    Returns:
+        dict: Configuration dictionary
+    """
+    # TODO: Load and parse YAML configuration
+    # TODO: Validate required fields
+    # TODO: Return configuration
+    pass
+
+def main():
+    """
+    Main entry point for SOAR integration.
+    """
+    # TODO: Load configuration
+    # TODO: Set up logging
+    # TODO: Initialize orchestrator
+    # TODO: Start alert processing loop
+    # TODO: Handle graceful shutdown
+    pass
+
+if __name__ == "__main__":
+    main()
+Task 5: Test and Validate SOAR Integration
+Step 1: Generate Test Alerts in Wazuh
+# SSH to generate brute force alerts (run on Wazuh agent)
+for i in {1..10}; do
+    ssh invalid_user@localhost 2>/dev/null
+    sleep 2
+done
+
+# Create test file to trigger file integrity monitoring
+echo "test" > /tmp/test_file.txt
+Step 2: Run Integration Tests
+Create tests/test_integration.py:
+
+#!/usr/bin/env python3
+import unittest
+import sys
+import os
+
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+from connectors.wazuh_connector import WazuhConnector
+from connectors.thehive_connector import TheHiveConnector
+
+class TestSOARIntegration(unittest.TestCase):
+    """
+    Integration tests for SOAR components.
+    """
+    
+    def test_wazuh_authentication(self):
+        """Test Wazuh API authentication."""
+        # TODO: Test authentication
+        # TODO: Verify token received
+        pass
+    
+    def test_wazuh_alert_retrieval(self):
+        """Test alert retrieval from Wazuh."""
+        # TODO: Retrieve alerts
+        # TODO: Verify alert format
+        pass
+    
+    def test_thehive_case_creation(self):
+        """Test case creation in TheHive."""
+        # TODO: Create test case
+        # TODO: Verify case created
+        pass
+    
+    def test_playbook_execution(self):
+        """Test playbook execution."""
+        # TODO: Execute test playbook
+        # TODO: Verify all steps completed
+        pass
+
+if __name__ == '__main__':
+    unittest.main()
+Step 3: Monitor and Validate
+# Run the SOAR integration
+cd ~/soar-integration
+python3 main.py
+
+# Monitor logs in another terminal
+tail -f logs/soar_integration.log
+
+# Check TheHive for created cases
+# Access http://localhost:9000 in browser
+Expected Outcomes
+After completing this lab, you should have:
+
+Functional Wazuh SIEM deployment
+TheHive case management platform integrated with Wazuh
+Working API connectors for both platforms
+At least two automated response playbooks
+Workflow orchestrator routing alerts to playbooks
+Automated case creation in TheHive based on SIEM alerts
+Logs showing automated response actions
+Troubleshooting Tips
+Docker containers not starting:
+
+Check available disk space: df -h
+Verify Docker service: sudo systemctl status docker
+Check container logs: docker-compose logs [service_name]
+API authentication failures:
+
+Verify service is fully started (wait 5-10 minutes after deployment)
+Check credentials in configuration files
+Test API manually with curl before running scripts
+Review firewall rules if using remote connections
+Playbooks not executing:
+
+Verify alert severity meets minimum threshold
+Check playbook routing logic in orchestrator
+Review logs for error messages
+Ensure all required Python modules are installed
+TheHive case creation fails:
+
+Confirm TheHive is accessible at configured URL
+Verify session/authentication is valid
+Check TheHive logs: docker-compose logs thehive
+Ensure Elasticsearch is running properly
+Conclusion
+This lab introduced Security Orchestration, Automation, and Response (SOAR) concepts through hands-on implementation. You deployed open-source SOAR tools (TheHive and Cortex), integrated them with Wazuh SIEM, and created automated playbooks for common security incidents. The workflow orchestrator you built demonstrates how modern security operations centers automate repetitive tasks, reduce response times, and improve overall security posture.
+
+Key takeaways:
+
+SOAR platforms reduce manual effort in incident response
+Automated playbooks ensure consistent response procedures
+Integration between SIEM and case management improves workflow
+Proper testing and validation are critical for reliable automation
+Continue developing additional playbooks for other incident types and refine your orchestration logic based on your organization's specific security requirements.
