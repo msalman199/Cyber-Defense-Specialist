@@ -1,0 +1,5 @@
+2024-01-15 10:30:15 EventID:4688 Process:powershell.exe CommandLine:"powershell -enc SQBuAHYAbwBrAGUA"
+2024-01-15 10:31:22 EventID:4697 Service:malicious_svc Path:C:\temp\backdoor.exe
+2024-01-15 10:32:10 EventID:4663 Object:C:\Windows\System32\lsass.exe Access:Read Process:mimikatz.exe
+2024-01-15 10:33:45 EventID:4648 Account:admin Target:DC01 Process:net.exe
+2024-01-15 10:34:12 EventID:5156 Protocol:TCP Source:192.168.1.100 Dest:10.0.0.5 Port:445
