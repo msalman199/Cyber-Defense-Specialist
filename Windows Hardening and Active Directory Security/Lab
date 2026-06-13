@@ -1,0 +1,447 @@
+Windows Hardening and Active Directory Security
+Objectives
+By the end of this lab, students will be able to:
+
+Implement Active Directory security policies using PowerShell automation
+Create registry hardening scripts for Windows security configurations
+Develop security monitoring and compliance validation tools
+Generate security reports and recommendations for enterprise environments
+Apply security best practices for Windows and Active Directory environments
+Prerequisites
+Before starting this lab, students should have:
+
+Basic understanding of Windows operating systems and Active Directory concepts
+Familiarity with PowerShell scripting and command-line interfaces
+Knowledge of security principles and Windows registry structure
+Understanding of JSON configuration files
+Lab Environment Setup
+Ready-to-Use Cloud Machines: Al Nafi provides Linux-based cloud machines with PowerShell Core pre-installed. Click Start Lab to access your environment.
+
+Your cloud machine includes:
+
+Ubuntu Linux with PowerShell Core
+Text editors (nano, vim)
+All necessary tools for Windows security simulation
+Task 1: Active Directory Security Automation
+Step 1: Create Lab Directory Structure
+Create the working directory and subdirectories:
+
+mkdir -p ~/ad-security-lab/{scripts,configs,logs}
+cd ~/ad-security-lab
+Step 2: Create AD Configuration File
+Create a simulated Active Directory configuration:
+
+nano configs/ad-config.json
+Add the following configuration:
+
+{
+  "domain": "company.local",
+  "users": [
+    {"username": "admin", "role": "Domain Admin", "enabled": true},
+    {"username": "jdoe", "role": "User", "enabled": true},
+    {"username": "msmith", "role": "User", "enabled": false},
+    {"username": "service_account", "role": "Service", "enabled": true}
+  ],
+  "security_policies": {
+    "password_policy": {
+      "min_length": 12,
+      "complexity": true,
+      "max_age": 90,
+      "history": 24
+    },
+    "lockout_policy": {
+      "threshold": 5,
+      "duration": 30,
+      "reset_counter": 30
+    }
+  }
+}
+Step 3: Create AD Security Automation Script
+Create the PowerShell automation script:
+
+nano scripts/ad-security-automation.ps1
+Add the following starter template:
+
+#!/usr/bin/env pwsh
+
+# AD Security Automation Script
+# Students: Complete the TODO sections to implement full functionality
+
+param(
+    [string]$ConfigFile = "./configs/ad-config.json",
+    [string]$LogFile = "./logs/ad-security.log"
+)
+
+function Write-SecurityLog {
+    param([string]$Message, [string]$Level = "INFO")
+    # TODO: Implement logging with timestamp
+    # TODO: Write to both console and log file
+}
+
+function Test-PasswordPolicy {
+    param($Policy)
+    
+    # TODO: Validate minimum password length (should be >= 8)
+    # TODO: Check if complexity is enabled
+    # TODO: Verify max age doesn't exceed 365 days
+    # TODO: Return true if all checks pass, false otherwise
+}
+
+function Test-LockoutPolicy {
+    param($Policy)
+    
+    # TODO: Verify lockout threshold is <= 10
+    # TODO: Check lockout duration is >= 15 minutes
+    # TODO: Return validation result
+}
+
+function Invoke-UserAudit {
+    param($Users)
+    
+    # TODO: Count disabled accounts
+    # TODO: Count admin accounts
+    # TODO: Count service accounts
+    # TODO: Log findings for each category
+}
+
+function New-SecurityRecommendations {
+    param($Config)
+    
+    # TODO: Check for excessive admin accounts (> 2)
+    # TODO: Identify disabled accounts that should be removed
+    # TODO: Verify password policy meets minimum standards
+    # TODO: Return array of recommendations
+}
+
+# Main execution
+try {
+    Write-SecurityLog "Starting AD Security Automation Script"
+    
+    # TODO: Create log directory if it doesn't exist
+    # TODO: Load and parse configuration file
+    # TODO: Validate security policies
+    # TODO: Perform user audit
+    # TODO: Generate recommendations
+    # TODO: Create summary report in JSON format
+    
+    Write-SecurityLog "AD Security Automation completed successfully"
+    
+} catch {
+    Write-SecurityLog "Error: $($_.Exception.Message)" "ERROR"
+    exit 1
+}
+Step 4: Execute the Security Automation
+Make the script executable and run it:
+
+chmod +x scripts/ad-security-automation.ps1
+pwsh scripts/ad-security-automation.ps1
+Review the generated logs:
+
+cat logs/ad-security.log
+cat logs/security-summary.json
+Task 2: Registry Security Hardening
+Step 5: Create Registry Configuration
+Create the registry security configuration structure:
+
+mkdir -p configs/registry
+nano configs/registry/security-registry.json
+Add the following configuration:
+
+{
+  "registry_security_settings": {
+    "HKLM": {
+      "SYSTEM\\CurrentControlSet\\Control\\Lsa": {
+        "LimitBlankPasswordUse": {
+          "type": "DWORD",
+          "value": 1,
+          "description": "Limit blank password use"
+        },
+        "NoLMHash": {
+          "type": "DWORD",
+          "value": 1,
+          "description": "Do not store LAN Manager hash"
+        }
+      },
+      "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System": {
+        "EnableLUA": {
+          "type": "DWORD",
+          "value": 1,
+          "description": "Enable User Account Control"
+        },
+        "ConsentPromptBehaviorAdmin": {
+          "type": "DWORD",
+          "value": 2,
+          "description": "UAC prompt for admin consent"
+        }
+      }
+    }
+  }
+}
+Step 6: Create Registry Hardening Script
+Create the registry hardening automation:
+
+nano scripts/registry-hardening.ps1
+Add the following starter template:
+
+#!/usr/bin/env pwsh
+
+# Registry Security Hardening Script
+# Students: Complete the TODO sections
+
+param(
+    [string]$ConfigFile = "./configs/registry/security-registry.json",
+    [string]$LogFile = "./logs/registry-hardening.log"
+)
+
+function Write-RegistryLog {
+    param([string]$Message, [string]$Level = "INFO")
+    # TODO: Implement logging functionality
+}
+
+function Test-RegistrySecuritySetting {
+    param(
+        [string]$KeyPath,
+        [string]$ValueName,
+        [object]$ExpectedValue,
+        [string]$Description
+    )
+    
+    # TODO: Simulate registry value check
+    # TODO: Compare expected vs current value
+    # TODO: Return compliance result object with:
+    #       - KeyPath, ValueName, ExpectedValue, CurrentValue
+    #       - Compliant (boolean), Description
+}
+
+function Invoke-RegistryHardening {
+    param($RegistrySettings)
+    
+    # TODO: Iterate through all registry hives
+    # TODO: Check each key path and value
+    # TODO: Track total checks and compliant checks
+    # TODO: Calculate compliance percentage
+    # TODO: Return results summary
+}
+
+function New-RegistryBackup {
+    param($Results)
+    
+    # TODO: Create backup object with timestamp
+    # TODO: Store all current registry settings
+    # TODO: Save to JSON file
+}
+
+function New-RemediationTemplate {
+    param($Results)
+    
+    # TODO: Identify non-compliant settings
+    # TODO: Generate remediation actions
+    # TODO: Save template for applying fixes
+}
+
+# Main execution
+try {
+    Write-RegistryLog "Starting Registry Security Hardening"
+    
+    # TODO: Load configuration file
+    # TODO: Perform registry hardening checks
+    # TODO: Create backup of current settings
+    # TODO: Generate remediation template
+    # TODO: Create compliance report
+    
+    Write-RegistryLog "Registry hardening completed"
+    
+} catch {
+    Write-RegistryLog "Error: $($_.Exception.Message)" "ERROR"
+    exit 1
+}
+Step 7: Execute Registry Hardening
+Run the registry hardening script:
+
+pwsh scripts/registry-hardening.ps1
+Review the results:
+
+cat logs/registry-hardening.log
+cat logs/registry-hardening-report.json
+Task 3: Security Monitoring and Reporting
+Step 8: Create Comprehensive Security Monitor
+Create a monitoring script that validates both AD and registry security:
+
+nano scripts/security-monitor.ps1
+Add the following starter template:
+
+#!/usr/bin/env pwsh
+
+# Comprehensive Security Monitoring Script
+# Students: Complete the TODO sections
+
+param(
+    [string]$OutputDir = "./logs",
+    [string]$ReportFile = "./logs/security-report.html"
+)
+
+function Get-ADSecurityStatus {
+    # TODO: Load AD security summary
+    # TODO: Calculate compliance score
+    # TODO: Return status object
+}
+
+function Get-RegistrySecurityStatus {
+    # TODO: Load registry hardening report
+    # TODO: Calculate compliance score
+    # TODO: Return status object
+}
+
+function Test-CriticalSecuritySettings {
+    # TODO: Check critical AD settings
+    # TODO: Check critical registry settings
+    # TODO: Generate alerts for non-compliant items
+    # TODO: Return array of alerts
+}
+
+function New-SecurityReport {
+    param($ADStatus, $RegistryStatus, $Alerts)
+    
+    # TODO: Calculate overall security score
+    # TODO: Generate recommendations
+    # TODO: Create HTML report with:
+    #       - Executive summary
+    #       - AD security status
+    #       - Registry security status
+    #       - Critical alerts
+    #       - Recommendations
+}
+
+# Main execution
+try {
+    # TODO: Collect AD security status
+    # TODO: Collect registry security status
+    # TODO: Run critical settings check
+    # TODO: Generate comprehensive report
+    # TODO: Save report to HTML file
+    
+    Write-Host "Security monitoring completed"
+    
+} catch {
+    Write-Host "Monitor error: $($_.Exception.Message)"
+    exit 1
+}
+Step 9: Create HTML Report Template
+Create a simple HTML report generator:
+
+nano scripts/generate-report.ps1
+Add the following starter template:
+
+#!/usr/bin/env pwsh
+
+# Security Report Generator
+# Students: Complete the HTML generation logic
+
+function New-HTMLSecurityReport {
+    param(
+        [string]$OutputFile = "./logs/security-report.html"
+    )
+    
+    # TODO: Load all security data from logs
+    # TODO: Calculate overall compliance score
+    # TODO: Generate HTML with CSS styling
+    # TODO: Include charts or visual indicators
+    # TODO: Add recommendations section
+    
+    $html = @"
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Security Hardening Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { background-color: #2c3e50; color: white; padding: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+        .compliant { color: green; }
+        .non-compliant { color: red; }
+        .warning { color: orange; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Windows Security Hardening Report</h1>
+        <p>Generated: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")</p>
+    </div>
+    
+    <!-- TODO: Add AD Security Section -->
+    <!-- TODO: Add Registry Security Section -->
+    <!-- TODO: Add Alerts Section -->
+    <!-- TODO: Add Recommendations Section -->
+    
+</body>
+</html>
+"@
+    
+    $html | Out-File $OutputFile
+    Write-Host "Report generated: $OutputFile"
+}
+
+# Execute report generation
+New-HTMLSecurityReport
+Step 10: Execute Complete Security Validation
+Run all security checks and generate the final report:
+
+# Run AD security automation
+pwsh scripts/ad-security-automation.ps1
+
+# Run registry hardening
+pwsh scripts/registry-hardening.ps1
+
+# Generate comprehensive report
+pwsh scripts/generate-report.ps1
+View the final report:
+
+cat logs/security-report.html
+Expected Outcomes
+After completing this lab, you should have:
+
+AD Security Automation: Scripts that validate password policies, lockout policies, and user accounts
+Registry Hardening: Automated checks for critical Windows registry security settings
+Security Monitoring: Continuous validation of security configurations
+Compliance Reports: JSON and HTML reports showing security posture
+Remediation Templates: Actionable recommendations for fixing security issues
+Your logs directory should contain:
+
+ad-security.log - AD security audit log
+security-summary.json - AD security summary
+registry-hardening.log - Registry hardening log
+registry-hardening-report.json - Registry compliance report
+security-report.html - Comprehensive security report
+Troubleshooting Tips
+Issue: PowerShell script fails to execute
+
+Solution: Ensure script has execute permissions: chmod +x scripts/*.ps1
+Solution: Verify PowerShell is installed: pwsh --version
+Issue: Configuration file not found
+
+Solution: Check file path is correct relative to script location
+Solution: Verify JSON syntax is valid using: cat configs/ad-config.json | jq
+Issue: Log files not being created
+
+Solution: Ensure logs directory exists: mkdir -p logs
+Solution: Check write permissions on logs directory: ls -la logs
+Issue: JSON parsing errors
+
+Solution: Validate JSON syntax at jsonlint.com
+Solution: Check for missing commas or brackets in configuration files
+Conclusion
+This lab provided hands-on experience with Windows security hardening and Active Directory security automation. You learned to:
+
+Automate security policy validation using PowerShell
+Implement registry hardening checks and monitoring
+Generate compliance reports for security auditing
+Create remediation templates for security issues
+These skills are essential for maintaining secure Windows environments in enterprise settings. The automation techniques learned here can be adapted to real-world Active Directory and Windows security management scenarios.
+
+Key Takeaways:
+
+Automation reduces human error in security configuration
+Regular monitoring ensures compliance with security policies
+Documentation and reporting are critical for security audits
+PowerShell provides powerful tools for Windows security management
+Continue practicing by extending these scripts with additional security checks and integrating them into larger security automation frameworks.
