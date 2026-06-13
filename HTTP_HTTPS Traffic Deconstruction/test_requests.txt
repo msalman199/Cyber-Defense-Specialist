@@ -1,0 +1,15 @@
+GET / HTTP/1.1
+Host: localhost:8080
+User-Agent: Mozilla/5.0
+
+POST /login HTTP/1.1
+Host: localhost:8080
+User-Agent: AttackBot/1.0
+Content-Length: 50
+
+GET /admin' OR '1'='1 HTTP/1.1
+Host: localhost:8080
+
+GET /../../../etc/passwd HTTP/1.1
+Host: localhost:8080
+X-Forwarded-For: 10.0.0.1
