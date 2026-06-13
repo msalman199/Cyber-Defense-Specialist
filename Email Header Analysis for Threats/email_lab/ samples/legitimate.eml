@@ -1,0 +1,13 @@
+Return-Path: <sender@company.com>
+Received: from mail.company.com (mail.company.com [192.0.2.10])
+    by mx.recipient.com with ESMTP id ABC123
+From: John Doe <sender@company.com>
+To: recipient@recipient.com
+Subject: Quarterly Report
+Date: Mon, 15 Jan 2024 10:30:00 +0000
+Message-ID: <msg123@company.com>
+DKIM-Signature: v=1; a=rsa-sha256; d=company.com; s=default;
+    h=from:to:subject; bh=abc123; b=xyz789
+SPF: pass
+
+Please review the attached quarterly report.
