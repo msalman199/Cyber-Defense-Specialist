@@ -1,0 +1,616 @@
+ Advanced Threat Intelligence Collection
+Objectives
+By the end of this lab, students will be able to:
+
+Collect threat intelligence data from multiple sources using Python
+Normalize and standardize threat indicators from different formats
+Implement data validation for IPs, domains, and file hashes
+Calculate risk scores based on multiple threat factors
+Generate automated threat intelligence reports
+Build a complete threat intelligence pipeline
+Prerequisites
+Students should have:
+
+Basic Python programming knowledge (functions, loops, dictionaries)
+Understanding of cybersecurity concepts and threat indicators
+Familiarity with JSON data format
+Basic Linux command line skills
+Lab Environment
+Al Nafi provides pre-configured Ubuntu 22.04 LTS cloud machines. Click Start Lab to access your environment with:
+
+Python 3.10 pre-installed
+Required libraries (requests, pandas, json)
+Sample threat data files
+Project directory structure
+Task 1: Environment Setup and Configuration
+Step 1: Create Project Structure
+# Create project directories
+mkdir -p ~/threat_intel/{scripts,data,reports,config,logs}
+cd ~/threat_intel
+
+# Verify Python installation
+python3 --version
+Step 2: Create Configuration File
+cat > config/sources.json << 'EOF'
+{
+    "data_sources": {
+        "local_feeds": ["malware_domains.txt", "suspicious_ips.txt"],
+        "api_endpoints": {
+            "virustotal": "https://www.virustotal.com/api/v3/",
+            "abuseipdb": "https://api.abuseipdb.com/api/v2/"
+        }
+    },
+    "thresholds": {
+        "high_risk": 80,
+        "medium_risk": 60,
+        "low_risk": 40
+    }
+}
+EOF
+Step 3: Create Sample Threat Data
+# Create sample malicious domains
+cat > data/malware_domains.txt << 'EOF'
+malicious-site.com
+phishing-example.net
+suspicious-domain.org
+threat-actor.info
+EOF
+
+# Create sample suspicious IPs
+cat > data/suspicious_ips.txt << 'EOF'
+192.168.1.100
+203.0.113.10
+198.51.100.20
+EOF
+Task 2: Implement Threat Intelligence Collector
+Step 1: Create Base Collector Class
+Create scripts/threat_collector.py:
+
+#!/usr/bin/env python3
+"""
+Threat Intelligence Collector
+Students: Complete the TODO sections to implement full functionality
+"""
+
+import json
+import hashlib
+import ipaddress
+import logging
+from datetime import datetime, timedelta
+from urllib.parse import urlparse
+
+class ThreatCollector:
+    def __init__(self, config_file="config/sources.json"):
+        """Initialize the threat collector with configuration"""
+        self.config = self.load_config(config_file)
+        self.collected_data = []
+        self.setup_logging()
+    
+    def load_config(self, config_file):
+        """Load configuration from JSON file"""
+        # TODO: Implement config file loading
+        # TODO: Add error handling for missing files
+        pass
+    
+    def setup_logging(self):
+        """Configure logging to file and console"""
+        # TODO: Set up logging with INFO level
+        # TODO: Configure file handler for logs/collection.log
+        # TODO: Add console handler for real-time output
+        pass
+    
+    def validate_ip(self, ip_string):
+        """
+        Validate if string is a valid IP address
+        
+        Args:
+            ip_string: String to validate
+            
+        Returns:
+            Boolean indicating if valid IP
+        """
+        # TODO: Use ipaddress module to validate
+        # TODO: Handle both IPv4 and IPv6
+        # TODO: Return True/False
+        pass
+    
+    def validate_domain(self, domain_string):
+        """
+        Validate if string is a valid domain name
+        
+        Args:
+            domain_string: String to validate
+            
+        Returns:
+            Boolean indicating if valid domain
+        """
+        # TODO: Check for valid domain format
+        # TODO: Verify contains at least one dot
+        # TODO: Return True/False
+        pass
+    
+    def validate_hash(self, hash_string):
+        """
+        Validate and identify hash type (MD5, SHA1, SHA256)
+        
+        Args:
+            hash_string: String to validate
+            
+        Returns:
+            Hash type string or None if invalid
+        """
+        # TODO: Check length (32=MD5, 40=SHA1, 64=SHA256)
+        # TODO: Verify hexadecimal characters only
+        # TODO: Return hash type or None
+        pass
+    
+    def collect_from_file(self, filename, indicator_type):
+        """
+        Collect indicators from local file
+        
+        Args:
+            filename: Path to file containing indicators
+            indicator_type: Type of indicators (ip, domain, hash)
+            
+        Returns:
+            List of collected indicators
+        """
+        # TODO: Read file line by line
+        # TODO: Validate each indicator based on type
+        # TODO: Create indicator dictionary with metadata
+        # TODO: Add to collected_data list
+        pass
+    
+    def enrich_indicator(self, indicator, indicator_type):
+        """
+        Enrich indicator with additional metadata
+        
+        Args:
+            indicator: The indicator value
+            indicator_type: Type of indicator
+            
+        Returns:
+            Dictionary with enriched indicator data
+        """
+        # TODO: Create base indicator structure
+        # TODO: Add timestamps (first_seen, last_seen)
+        # TODO: Generate unique ID using hashlib
+        # TODO: Add default confidence score
+        # TODO: Return enriched dictionary
+        pass
+    
+    def calculate_risk_score(self, indicator_data):
+        """
+        Calculate risk score based on multiple factors
+        
+        Args:
+            indicator_data: Dictionary containing indicator information
+            
+        Returns:
+            Integer risk score (0-100)
+        """
+        # TODO: Start with base confidence score
+        # TODO: Add points for recent activity
+        # TODO: Add points for threat type severity
+        # TODO: Ensure score stays within 0-100 range
+        pass
+    
+    def save_collected_data(self, output_file=None):
+        """
+        Save collected data to JSON file
+        
+        Args:
+            output_file: Optional output filename
+            
+        Returns:
+            Path to saved file
+        """
+        # TODO: Generate timestamp-based filename if not provided
+        # TODO: Save collected_data to JSON with proper formatting
+        # TODO: Log success message
+        # TODO: Return filename
+        pass
+    
+    def run_collection(self):
+        """Execute the complete collection process"""
+        # TODO: Collect from all configured sources
+        # TODO: Enrich all collected indicators
+        # TODO: Calculate risk scores
+        # TODO: Save results
+        # TODO: Return summary statistics
+        pass
+
+def main():
+    """Main execution function"""
+    print("Threat Intelligence Collector")
+    print("=" * 50)
+    
+    # TODO: Initialize collector
+    # TODO: Run collection process
+    # TODO: Display summary statistics
+    # TODO: Handle errors gracefully
+
+if __name__ == "__main__":
+    main()
+Step 2: Test Basic Collection
+# Make script executable
+chmod +x scripts/threat_collector.py
+
+# Run the collector (after implementing TODO sections)
+python3 scripts/threat_collector.py
+Step 3: Verify Output
+# Check generated data files
+ls -lh data/
+
+# View collected data structure
+python3 -m json.tool data/collected_*.json | head -30
+Task 3: Implement Data Normalization
+Step 1: Create Normalizer Script
+Create scripts/data_normalizer.py:
+
+#!/usr/bin/env python3
+"""
+Threat Intelligence Data Normalizer
+Students: Complete the TODO sections
+"""
+
+import json
+import re
+from datetime import datetime
+from collections import defaultdict
+
+class ThreatNormalizer:
+    def __init__(self):
+        """Initialize the normalizer"""
+        self.normalized_data = []
+        self.duplicate_count = 0
+        
+    def load_raw_data(self, data_file):
+        """
+        Load raw threat intelligence data
+        
+        Args:
+            data_file: Path to JSON file with raw data
+            
+        Returns:
+            List of raw indicators
+        """
+        # TODO: Load JSON data from file
+        # TODO: Validate data structure
+        # TODO: Return list of indicators
+        pass
+    
+    def normalize_confidence(self, confidence_value):
+        """
+        Normalize confidence scores to 0-100 scale
+        
+        Args:
+            confidence_value: Raw confidence value
+            
+        Returns:
+            Normalized confidence score (0-100)
+        """
+        # TODO: Handle None/missing values (default 50)
+        # TODO: Convert 0-1 range to 0-100
+        # TODO: Ensure value is within valid range
+        pass
+    
+    def normalize_severity(self, risk_score):
+        """
+        Calculate severity level from risk score
+        
+        Args:
+            risk_score: Numeric risk score
+            
+        Returns:
+            Severity string (HIGH, MEDIUM, LOW, INFO)
+        """
+        # TODO: Map risk scores to severity levels
+        # TODO: Use thresholds: >=80 HIGH, >=60 MEDIUM, >=40 LOW, <40 INFO
+        pass
+    
+    def normalize_tags(self, tags):
+        """
+        Normalize and standardize threat tags
+        
+        Args:
+            tags: List or string of tags
+            
+        Returns:
+            List of normalized tags
+        """
+        # TODO: Convert string to list if needed
+        # TODO: Lowercase and strip whitespace
+        # TODO: Map common variations (c2->command_control, etc.)
+        # TODO: Remove duplicates
+        pass
+    
+    def deduplicate_indicators(self, indicators):
+        """
+        Remove duplicate indicators, keeping highest confidence
+        
+        Args:
+            indicators: List of indicator dictionaries
+            
+        Returns:
+            List of unique indicators
+        """
+        # TODO: Create unique key from indicator value + type
+        # TODO: Keep indicator with highest confidence
+        # TODO: Merge tags from duplicates
+        # TODO: Track duplicate count
+        pass
+    
+    def normalize_dataset(self, raw_data):
+        """
+        Normalize entire dataset
+        
+        Args:
+            raw_data: List of raw indicators
+            
+        Returns:
+            List of normalized indicators
+        """
+        # TODO: Iterate through raw indicators
+        # TODO: Apply all normalization functions
+        # TODO: Create standardized structure
+        # TODO: Remove duplicates
+        pass
+    
+    def save_normalized_data(self, output_file):
+        """
+        Save normalized data to file
+        
+        Args:
+            output_file: Path for output file
+        """
+        # TODO: Save normalized_data to JSON
+        # TODO: Include metadata (normalization timestamp, counts)
+        pass
+    
+    def generate_statistics(self):
+        """
+        Generate statistics about normalized data
+        
+        Returns:
+            Dictionary with statistics
+        """
+        # TODO: Count indicators by type
+        # TODO: Count indicators by severity
+        # TODO: Calculate average confidence
+        # TODO: Return statistics dictionary
+        pass
+
+def main():
+    """Main execution function"""
+    # TODO: Initialize normalizer
+    # TODO: Load raw data
+    # TODO: Normalize dataset
+    # TODO: Save results
+    # TODO: Display statistics
+
+if __name__ == "__main__":
+    main()
+Step 2: Run Normalization
+# Execute normalizer (after completing TODO sections)
+python3 scripts/data_normalizer.py
+
+# Compare raw vs normalized data
+echo "Raw indicators:"
+python3 -c "import json; print(len(json.load(open('data/collected_*.json'))))"
+
+echo "Normalized indicators:"
+python3 -c "import json; print(len(json.load(open('data/normalized_*.json'))))"
+Task 4: Generate Threat Intelligence Reports
+Step 1: Create Report Generator
+Create scripts/report_generator.py:
+
+#!/usr/bin/env python3
+"""
+Threat Intelligence Report Generator
+Students: Complete the TODO sections
+"""
+
+import json
+from datetime import datetime
+from collections import Counter
+
+class ReportGenerator:
+    def __init__(self, data_file):
+        """Initialize report generator with data file"""
+        self.data = self.load_data(data_file)
+        self.report_sections = []
+    
+    def load_data(self, data_file):
+        """Load normalized threat intelligence data"""
+        # TODO: Load JSON data
+        # TODO: Validate structure
+        pass
+    
+    def generate_executive_summary(self):
+        """
+        Generate executive summary section
+        
+        Returns:
+            String with formatted summary
+        """
+        # TODO: Count total indicators
+        # TODO: Count high severity indicators
+        # TODO: Identify top threat types
+        # TODO: Format as readable text
+        pass
+    
+    def generate_severity_breakdown(self):
+        """
+        Generate severity level breakdown
+        
+        Returns:
+            String with severity statistics
+        """
+        # TODO: Count indicators by severity
+        # TODO: Calculate percentages
+        # TODO: Format as table or list
+        pass
+    
+    def generate_indicator_type_analysis(self):
+        """
+        Analyze indicators by type
+        
+        Returns:
+            String with type analysis
+        """
+        # TODO: Count by indicator type (IP, domain, hash)
+        # TODO: Calculate distribution
+        # TODO: Format results
+        pass
+    
+    def generate_top_threats(self, limit=10):
+        """
+        List top threats by risk score
+        
+        Args:
+            limit: Number of top threats to include
+            
+        Returns:
+            String with top threats list
+        """
+        # TODO: Sort indicators by risk score
+        # TODO: Select top N indicators
+        # TODO: Format with key details
+        pass
+    
+    def generate_html_report(self, output_file):
+        """
+        Generate HTML format report
+        
+        Args:
+            output_file: Path for HTML output
+        """
+        # TODO: Create HTML structure
+        # TODO: Add CSS styling
+        # TODO: Include all report sections
+        # TODO: Save to file
+        pass
+    
+    def generate_text_report(self, output_file):
+        """
+        Generate plain text report
+        
+        Args:
+            output_file: Path for text output
+        """
+        # TODO: Combine all sections
+        # TODO: Format as plain text
+        # TODO: Save to file
+        pass
+    
+    def generate_json_report(self, output_file):
+        """
+        Generate JSON format report
+        
+        Args:
+            output_file: Path for JSON output
+        """
+        # TODO: Create structured report dictionary
+        # TODO: Include all statistics and summaries
+        # TODO: Save as formatted JSON
+        pass
+
+def main():
+    """Main execution function"""
+    # TODO: Initialize report generator
+    # TODO: Generate all report sections
+    # TODO: Save in multiple formats
+    # TODO: Display completion message
+
+if __name__ == "__main__":
+    main()
+Step 2: Generate Reports
+# Generate reports (after completing TODO sections)
+python3 scripts/report_generator.py
+
+# View generated reports
+ls -lh reports/
+
+# Display text report
+cat reports/threat_report_*.txt
+Step 3: Create Automated Pipeline
+Create scripts/run_pipeline.sh:
+
+#!/bin/bash
+# Complete threat intelligence pipeline
+
+echo "Starting Threat Intelligence Pipeline"
+echo "======================================"
+
+# Step 1: Collect data
+echo "[1/3] Collecting threat intelligence..."
+python3 scripts/threat_collector.py
+
+# Step 2: Normalize data
+echo "[2/3] Normalizing data..."
+python3 scripts/data_normalizer.py
+
+# Step 3: Generate reports
+echo "[3/3] Generating reports..."
+python3 scripts/report_generator.py
+
+echo "Pipeline completed successfully!"
+echo "Check reports/ directory for output"
+# Make pipeline executable
+chmod +x scripts/run_pipeline.sh
+
+# Run complete pipeline
+./scripts/run_pipeline.sh
+Expected Outcomes
+After completing this lab, students will have:
+
+A functional threat intelligence collection system
+Scripts that validate and normalize threat indicators
+Automated risk scoring based on multiple factors
+Multi-format reporting capabilities (JSON, HTML, text)
+A complete pipeline for threat intelligence processing
+Key Deliverables:
+
+threat_collector.py - Collects indicators from multiple sources
+data_normalizer.py - Standardizes and deduplicates data
+report_generator.py - Creates comprehensive reports
+Sample data files demonstrating the complete workflow
+Troubleshooting Tips
+Issue: Import errors for required modules
+
+Solution: Install missing packages with pip3 install <package_name>
+Verify installation: python3 -c "import <module>"
+Issue: File not found errors
+
+Solution: Ensure you're in the correct directory (~/threat_intel)
+Check file paths in configuration files
+Verify data files exist before processing
+Issue: JSON parsing errors
+
+Solution: Validate JSON syntax using python3 -m json.tool <file>
+Check for trailing commas or missing brackets
+Ensure proper UTF-8 encoding
+Issue: Empty or missing output files
+
+Solution: Check logs directory for error messages
+Verify write permissions on output directories
+Ensure data collection completed successfully before normalization
+Conclusion
+This lab provided hands-on experience building a complete threat intelligence collection and analysis system. Students implemented data collection from multiple sources, normalized indicators into standardized formats, calculated risk scores, and generated automated reports.
+
+Key Skills Developed:
+
+Threat indicator validation and classification
+Data normalization across different formats
+Risk assessment and scoring methodologies
+Automated report generation
+Building security automation pipelines
+Next Steps:
+
+Integrate real threat intelligence APIs (VirusTotal, AbuseIPDB)
+Add database storage for historical tracking
+Implement alerting for high-risk indicators
+Create visualization dashboards
+Develop correlation rules for related indicators
+The completed scripts serve as a foundation for production threat intelligence systems used in Security Operations Centers (SOCs) worldwide.
