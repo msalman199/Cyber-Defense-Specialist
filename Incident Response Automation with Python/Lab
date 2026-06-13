@@ -1,0 +1,596 @@
+Incident Response Automation with Python
+Objectives
+By the end of this lab, students will be able to:
+
+Build automated log collection and analysis systems using Python
+Implement severity-based incident response workflows
+Create automated alerting mechanisms for security events
+Develop scripts for threat detection and pattern matching
+Configure automated response actions based on incident severity
+Prerequisites
+Before starting this lab, students should have:
+
+Basic Python programming knowledge (functions, file I/O, regular expressions)
+Familiarity with Linux command line and log file structures
+Understanding of basic cybersecurity concepts and incident response principles
+Lab Environment
+Al Nafi Cloud Machine Setup: This lab runs on a single Linux-based cloud machine. Click Start Lab to access your pre-configured environment with Python 3 and necessary tools installed.
+
+Task 1: Setting Up the Incident Response Framework
+Step 1.1: Create Directory Structure
+Set up the working environment for incident response automation:
+
+# Create main directory structure
+mkdir -p ~/incident_response/{scripts,logs,reports,config,alerts}
+cd ~/incident_response
+
+# Create subdirectories
+mkdir -p logs/{system,security,application}
+mkdir -p scripts/{collection,analysis,response}
+mkdir -p reports/incidents
+Step 1.2: Generate Sample Log Files
+Create realistic log files for testing:
+
+# System logs with security events
+cat > logs/system/syslog.log << 'EOF'
+2024-01-15 10:30:15 server01 sshd[5678]: Failed password for root from 192.168.1.100 port 22
+2024-01-15 10:31:20 server01 sshd[5679]: Failed password for admin from 192.168.1.100 port 22
+2024-01-15 10:32:25 server01 sshd[5680]: Failed password for root from 192.168.1.100 port 22
+2024-01-15 10:33:30 server01 kernel: CPU usage spike detected: 95% utilization
+2024-01-15 10:34:35 server01 firewall: BLOCKED connection from 10.0.0.50 to port 443
+EOF
+
+# Security authentication logs
+cat > logs/security/auth.log << 'EOF'
+2024-01-15 10:30:00 server01 login: FAILED LOGIN FROM 192.168.1.200 FOR user1
+2024-01-15 10:30:05 server01 login: FAILED LOGIN FROM 192.168.1.200 FOR user1
+2024-01-15 10:30:10 server01 login: FAILED LOGIN FROM 192.168.1.200 FOR user1
+2024-01-15 10:30:15 server01 sudo: user2 : USER=root ; COMMAND=/bin/rm -rf /tmp/test
+2024-01-15 10:30:20 server01 login: ROOT LOGIN ON tty1
+EOF
+
+# Application logs with attack patterns
+cat > logs/application/webapp.log << 'EOF'
+2024-01-15 10:29:45 [ERROR] SQL injection attempt: SELECT * FROM users WHERE id='1 OR 1=1--'
+2024-01-15 10:30:50 [WARN] Multiple failed auth from IP: 203.0.113.45
+2024-01-15 10:31:55 [ERROR] Path traversal attempt: ../../../etc/passwd
+2024-01-15 10:32:00 [INFO] User admin logged in successfully
+2024-01-15 10:33:05 [ERROR] XSS attempt detected: <script>alert('XSS')</script>
+EOF
+Step 1.3: Create Configuration File
+Set up the response configuration:
+
+cat > config/response_config.json << 'EOF'
+{
+  "email": {
+    "smtp_server": "localhost",
+    "smtp_port": 587,
+    "recipients": ["admin@company.com", "security@company.com"]
+  },
+  "blocking": {
+    "use_iptables": true,
+    "block_duration": 3600,
+    "whitelist_ips": ["127.0.0.1", "192.168.1.1"]
+  },
+  "thresholds": {
+    "failed_login_count": 3,
+    "time_window_seconds": 300
+  }
+}
+EOF
+Task 2: Building the Log Collector
+Step 2.1: Create Log Collection Script Template
+Create scripts/collection/log_collector.py:
+
+#!/usr/bin/env python3
+"""
+Log Collector for Incident Response
+Collects logs from multiple sources for analysis
+"""
+
+import os
+import shutil
+import datetime
+import json
+from pathlib import Path
+
+class LogCollector:
+    def __init__(self, base_dir="/home/ubuntu/incident_response"):
+        self.base_dir = Path(base_dir)
+        self.logs_dir = self.base_dir / "logs"
+        self.reports_dir = self.base_dir / "reports"
+        self.timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        
+    def collect_system_logs(self):
+        """
+        Collect system logs from various sources.
+        
+        Returns:
+            dict: Dictionary of collected log file paths
+        """
+        # TODO: Implement log collection from /var/log/syslog
+        # TODO: Handle file not found errors gracefully
+        # TODO: Copy logs to logs/system directory with timestamp
+        # TODO: Return dictionary with log names and paths
+        pass
+    
+    def collect_security_logs(self):
+        """
+        Collect security-related logs (auth.log, secure, etc.).
+        
+        Returns:
+            dict: Dictionary of collected security log paths
+        """
+        # TODO: Collect authentication logs
+        # TODO: Collect sudo logs if available
+        # TODO: Store in logs/security directory
+        pass
+    
+    def collect_application_logs(self):
+        """
+        Collect application-specific logs.
+        
+        Returns:
+            dict: Dictionary of application log paths
+        """
+        # TODO: Scan logs/application directory
+        # TODO: Collect web server logs if present
+        # TODO: Return collected log information
+        pass
+    
+    def generate_collection_report(self, collected_data):
+        """
+        Generate JSON report of collection activity.
+        
+        Args:
+            collected_data: Dictionary of collected logs
+            
+        Returns:
+            str: Path to generated report file
+        """
+        # TODO: Create report dictionary with timestamp
+        # TODO: Include list of collected files
+        # TODO: Save as JSON in reports/incidents directory
+        # TODO: Return report file path
+        pass
+    
+    def run_collection(self):
+        """Execute complete log collection process."""
+        print(f"[INFO] Starting log collection at {datetime.datetime.now()}")
+        
+        # TODO: Call all collection methods
+        # TODO: Aggregate results
+        # TODO: Generate collection report
+        # TODO: Print summary of collected logs
+        pass
+
+if __name__ == "__main__":
+    collector = LogCollector()
+    collector.run_collection()
+Make the script executable:
+
+chmod +x scripts/collection/log_collector.py
+Task 3: Implementing Log Analysis
+Step 3.1: Create Log Analyzer Template
+Create scripts/analysis/log_analyzer.py:
+
+#!/usr/bin/env python3
+"""
+Log Analyzer for Security Incident Detection
+Analyzes logs for security patterns and threats
+"""
+
+import re
+import json
+import datetime
+from pathlib import Path
+from collections import defaultdict, Counter
+
+class LogAnalyzer:
+    def __init__(self, base_dir="/home/ubuntu/incident_response"):
+        self.base_dir = Path(base_dir)
+        self.logs_dir = self.base_dir / "logs"
+        self.reports_dir = self.base_dir / "reports"
+        
+        # Security patterns to detect
+        self.security_patterns = {
+            "failed_login": [
+                r"Failed password for .+ from (\d+\.\d+\.\d+\.\d+)",
+                r"FAILED LOGIN.*FROM (\d+\.\d+\.\d+\.\d+)"
+            ],
+            "sql_injection": [
+                r"SQL injection",
+                r"(\'\s*OR\s*\d+\s*=\s*\d+)"
+            ],
+            "xss_attempt": [
+                r"<script.*?>",
+                r"javascript:"
+            ],
+            "privilege_escalation": [
+                r"sudo.*?rm\s+-rf",
+                r"USER=root.*COMMAND="
+            ]
+        }
+        
+        # Severity mapping
+        self.severity_mapping = {
+            "failed_login": "medium",
+            "sql_injection": "high",
+            "xss_attempt": "medium",
+            "privilege_escalation": "critical"
+        }
+    
+    def analyze_log_file(self, log_file):
+        """
+        Analyze a single log file for security incidents.
+        
+        Args:
+            log_file: Path to log file
+            
+        Returns:
+            list: List of detected incidents
+        """
+        # TODO: Read log file content
+        # TODO: Apply regex patterns to detect incidents
+        # TODO: Extract IP addresses from matches
+        # TODO: Create incident dictionaries with type, severity, timestamp
+        # TODO: Return list of incidents
+        pass
+    
+    def analyze_all_logs(self):
+        """
+        Analyze all log files in the logs directory.
+        
+        Returns:
+            list: All detected incidents across all logs
+        """
+        # TODO: Find all .log files in logs subdirectories
+        # TODO: Analyze each file using analyze_log_file()
+        # TODO: Aggregate all incidents
+        # TODO: Return complete incident list
+        pass
+    
+    def categorize_incidents(self, incidents):
+        """
+        Categorize incidents by type, severity, and source IP.
+        
+        Args:
+            incidents: List of incident dictionaries
+            
+        Returns:
+            dict: Categorized incidents
+        """
+        # TODO: Create categorization structure
+        # TODO: Group by incident type
+        # TODO: Group by severity level
+        # TODO: Group by source IP address
+        # TODO: Return categorized dictionary
+        pass
+    
+    def calculate_statistics(self, incidents):
+        """
+        Calculate statistics from detected incidents.
+        
+        Args:
+            incidents: List of incidents
+            
+        Returns:
+            dict: Statistics dictionary
+        """
+        # TODO: Count total incidents
+        # TODO: Count incidents by type
+        # TODO: Count incidents by severity
+        # TODO: Identify top source IPs
+        # TODO: Return statistics dictionary
+        pass
+    
+    def generate_analysis_report(self, incidents, categorized, stats):
+        """
+        Generate comprehensive analysis report.
+        
+        Args:
+            incidents: List of all incidents
+            categorized: Categorized incidents
+            stats: Statistics dictionary
+            
+        Returns:
+            tuple: (report_dict, report_file_path)
+        """
+        # TODO: Create report structure with timestamp
+        # TODO: Include statistics section
+        # TODO: Include categorized incidents
+        # TODO: Save as JSON file
+        # TODO: Return report data and file path
+        pass
+    
+    def print_summary(self, stats):
+        """Print analysis summary to console."""
+        print("\n" + "="*50)
+        print("INCIDENT ANALYSIS SUMMARY")
+        print("="*50)
+        # TODO: Print total incidents
+        # TODO: Print incident types with counts
+        # TODO: Print severity distribution
+        # TODO: Print top source IPs
+        print("="*50)
+    
+    def run_analysis(self):
+        """Execute complete log analysis process."""
+        print(f"[INFO] Starting analysis at {datetime.datetime.now()}")
+        
+        # TODO: Analyze all logs
+        # TODO: Categorize incidents
+        # TODO: Calculate statistics
+        # TODO: Generate report
+        # TODO: Print summary
+        pass
+
+if __name__ == "__main__":
+    analyzer = LogAnalyzer()
+    analyzer.run_analysis()
+Make the script executable:
+
+chmod +x scripts/analysis/log_analyzer.py
+Task 4: Creating Automated Response System
+Step 4.1: Build Incident Responder Template
+Create scripts/response/incident_responder.py:
+
+#!/usr/bin/env python3
+"""
+Automated Incident Response Engine
+Executes response actions based on incident severity
+"""
+
+import json
+import datetime
+import subprocess
+import os
+from pathlib import Path
+
+class IncidentResponder:
+    def __init__(self, base_dir="/home/ubuntu/incident_response"):
+        self.base_dir = Path(base_dir)
+        self.config_dir = self.base_dir / "config"
+        self.alerts_dir = self.base_dir / "alerts"
+        
+        self.load_config()
+        
+        # Response actions by severity
+        self.response_actions = {
+            "critical": ["block_ip", "send_alert", "create_ticket", "backup_logs"],
+            "high": ["block_ip", "send_alert", "create_ticket"],
+            "medium": ["log_incident", "send_notification"],
+            "low": ["log_incident"]
+        }
+    
+    def load_config(self):
+        """Load configuration from JSON file."""
+        # TODO: Load config/response_config.json
+        # TODO: Handle missing config file
+        # TODO: Store in self.config
+        pass
+    
+    def block_source_ip(self, ip_address):
+        """
+        Block source IP using iptables.
+        
+        Args:
+            ip_address: IP address to block
+            
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        # TODO: Check if IP is in whitelist
+        # TODO: Construct iptables command
+        # TODO: Execute: sudo iptables -A INPUT -s <ip> -j DROP
+        # TODO: Log the blocking action
+        # TODO: Return success status
+        pass
+    
+    def send_alert_email(self, incident_data):
+        """
+        Send alert email for critical incidents.
+        
+        Args:
+            incident_data: Dictionary with incident details
+            
+        Returns:
+            bool: True if successful
+        """
+        # TODO: Format email message with incident details
+        # TODO: Include incident type, severity, timestamp, source IP
+        # TODO: For this lab, print email content (simulated)
+        # TODO: Log the alert action
+        # TODO: Return success status
+        pass
+    
+    def create_incident_ticket(self, incident_data):
+        """
+        Create incident tracking ticket.
+        
+        Args:
+            incident_data: Incident details
+            
+        Returns:
+            str: Ticket ID
+        """
+        # TODO: Generate unique ticket ID (INC-TIMESTAMP-TYPE)
+        # TODO: Create ticket dictionary with all details
+        # TODO: Save ticket as JSON in alerts directory
+        # TODO: Print ticket ID
+        # TODO: Return ticket ID
+        pass
+    
+    def backup_logs(self):
+        """
+        Backup current logs for forensic analysis.
+        
+        Returns:
+            str: Path to backup directory
+        """
+        # TODO: Create timestamped backup directory
+        # TODO: Copy entire logs directory to backup location
+        # TODO: Log the backup action
+        # TODO: Return backup path
+        pass
+    
+    def log_response_action(self, action_type, action_data):
+        """
+        Log response actions taken.
+        
+        Args:
+            action_type: Type of action performed
+            action_data: Action details
+        """
+        # TODO: Create log entry with timestamp
+        # TODO: Append to alerts/response_actions.log
+        pass
+    
+    def respond_to_incident(self, incident):
+        """
+        Execute appropriate response actions for an incident.
+        
+        Args:
+            incident: Incident dictionary with severity and details
+            
+        Returns:
+            dict: Results of response actions
+        """
+        # TODO: Get severity level from incident
+        # TODO: Get appropriate actions for severity
+        # TODO: Execute each action (block_ip, send_alert, etc.)
+        # TODO: Log all actions taken
+        # TODO: Return results dictionary
+        pass
+    
+    def respond_to_multiple_incidents(self, incidents):
+        """
+        Process and respond to multiple incidents.
+        
+        Args:
+            incidents: List of incident dictionaries
+        """
+        # TODO: Iterate through incidents
+        # TODO: Call respond_to_incident() for each
+        # TODO: Track total actions taken
+        # TODO: Print summary of responses
+        pass
+
+if __name__ == "__main__":
+    responder = IncidentResponder()
+    
+    # TODO: Load incidents from analysis report
+    # TODO: Process each incident
+    # TODO: Generate response summary
+Make the script executable:
+
+chmod +x scripts/response/incident_responder.py
+Step 4.2: Create Integration Script
+Create scripts/automated_response.py to integrate all components:
+
+#!/usr/bin/env python3
+"""
+Integrated Incident Response Automation
+Orchestrates collection, analysis, and response
+"""
+
+import sys
+import os
+sys.path.insert(0, os.path.expanduser('~/incident_response/scripts'))
+
+from collection.log_collector import LogCollector
+from analysis.log_analyzer import LogAnalyzer
+from response.incident_responder import IncidentResponder
+
+def main():
+    """
+    Main automation workflow.
+    """
+    print("="*60)
+    print("AUTOMATED INCIDENT RESPONSE SYSTEM")
+    print("="*60)
+    
+    # TODO: Step 1 - Collect logs
+    # TODO: Step 2 - Analyze logs for incidents
+    # TODO: Step 3 - Respond to detected incidents
+    # TODO: Step 4 - Generate final summary report
+    
+    print("\n[INFO] Incident response automation completed")
+
+if __name__ == "__main__":
+    main()
+Make executable:
+
+chmod +x scripts/automated_response.py
+Expected Outcomes
+After completing this lab, students should have:
+
+Functional log collector that gathers logs from multiple sources
+Pattern-based analyzer that detects security incidents using regex
+Automated responder that takes actions based on incident severity
+Complete workflow integrating collection, analysis, and response
+JSON reports documenting incidents and response actions
+Testing Your Implementation
+Run each component individually:
+
+# Test log collection
+python3 scripts/collection/log_collector.py
+
+# Test log analysis
+python3 scripts/analysis/log_analyzer.py
+
+# Test incident response (after analysis)
+python3 scripts/response/incident_responder.py
+
+# Run complete automation
+python3 scripts/automated_response.py
+Verify outputs:
+
+# Check generated reports
+ls -lh reports/incidents/
+
+# Check incident tickets
+ls -lh alerts/
+
+# View response actions log
+cat alerts/response_actions.log
+Troubleshooting Tips
+Issue: Permission denied when running scripts
+
+Solution: Ensure scripts are executable with chmod +x script_name.py
+Check file ownership: ls -l scripts/
+Issue: Module import errors
+
+Solution: Verify directory structure matches expected paths
+Check Python path includes script directories
+Use absolute imports or adjust sys.path
+Issue: No incidents detected
+
+Solution: Verify sample log files exist in logs/ subdirectories
+Check regex patterns match log format
+Print log content to debug pattern matching
+Issue: iptables commands fail
+
+Solution: Requires sudo privileges (may not work in restricted environments)
+For testing, simulate blocking by logging action instead of executing command
+Check if iptables is installed: which iptables
+Conclusion
+This lab demonstrated building an automated incident response system using Python. Students learned to:
+
+Collect logs programmatically from multiple sources
+Detect security incidents using pattern matching and regular expressions
+Implement severity-based automated response workflows
+Integrate multiple components into a cohesive automation system
+Key Takeaways:
+
+Automation reduces incident response time significantly
+Pattern-based detection requires careful regex design and testing
+Severity levels help prioritize response actions appropriately
+Logging all actions creates an audit trail for compliance
+Next Steps:
+
+Enhance pattern detection with machine learning algorithms
+Integrate with SIEM platforms for enterprise deployment
+Add real-time monitoring using file watchers
+Implement more sophisticated blocking mechanisms (fail2ban integration)
+Create web dashboard for incident visualization
