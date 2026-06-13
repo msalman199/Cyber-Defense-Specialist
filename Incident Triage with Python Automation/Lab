@@ -1,0 +1,569 @@
+Incident Triage with Python Automation
+Objectives
+By the end of this lab, students will be able to:
+
+Automate security alert analysis and filtering using Python
+Implement rule-based systems to identify false positives
+Calculate priority scores for incident classification
+Build automated triage workflows for SIEM alerts
+Generate incident reports and recommendations
+Prerequisites
+Basic Python programming (functions, loops, conditionals, dictionaries)
+Understanding of security concepts (alerts, incidents, severity levels)
+Familiarity with JSON data format
+Linux command line basics
+Lab Environment
+Ready-to-Use Cloud Machines: Al Nafi provides Linux-based cloud machines for this lab. Click Start Lab to access your pre-configured environment with Python 3.8+, required libraries (json, datetime, re), and text editors pre-installed.
+
+Task 1: Setting Up the Triage Environment
+Step 1.1: Create Project Structure
+mkdir -p ~/incident_triage_lab/{data,scripts,reports,rules}
+cd ~/incident_triage_lab
+Step 1.2: Create Sample Alert Data
+Create data/sample_alerts.json:
+
+[
+  {
+    "alert_id": "ALT-001",
+    "timestamp": "2024-01-15T10:30:00Z",
+    "severity": "HIGH",
+    "source_ip": "192.168.1.100",
+    "destination_ip": "8.8.8.8",
+    "alert_type": "Suspicious DNS Query",
+    "description": "Multiple DNS queries to suspicious domains",
+    "event_count": 15,
+    "user": "john.doe",
+    "asset": "WORKSTATION-01"
+  },
+  {
+    "alert_id": "ALT-002",
+    "timestamp": "2024-01-15T10:35:00Z",
+    "severity": "MEDIUM",
+    "source_ip": "192.168.1.50",
+    "destination_ip": "10.0.0.1",
+    "alert_type": "Failed Login Attempt",
+    "description": "Multiple failed login attempts detected",
+    "event_count": 3,
+    "user": "admin",
+    "asset": "SERVER-01"
+  },
+  {
+    "alert_id": "ALT-003",
+    "timestamp": "2024-01-15T10:40:00Z",
+    "severity": "LOW",
+    "source_ip": "192.168.1.200",
+    "destination_ip": "192.168.1.1",
+    "alert_type": "Port Scan",
+    "description": "Scheduled vulnerability scan",
+    "event_count": 100,
+    "user": "vuln_scanner",
+    "asset": "SCANNER-01"
+  },
+  {
+    "alert_id": "ALT-004",
+    "timestamp": "2024-01-15T10:45:00Z",
+    "severity": "CRITICAL",
+    "source_ip": "203.0.113.10",
+    "destination_ip": "192.168.1.10",
+    "alert_type": "Malware Detection",
+    "description": "Malicious file detected on endpoint",
+    "event_count": 1,
+    "user": "jane.smith",
+    "asset": "WORKSTATION-02"
+  },
+  {
+    "alert_id": "ALT-005",
+    "timestamp": "2024-01-15T10:50:00Z",
+    "severity": "MEDIUM",
+    "source_ip": "192.168.1.75",
+    "destination_ip": "172.16.0.5",
+    "alert_type": "Data Exfiltration",
+    "description": "Large data transfer detected",
+    "event_count": 1,
+    "user": "backup_service",
+    "asset": "BACKUP-SERVER"
+  }
+]
+Step 1.3: Create Triage Rules Configuration
+Create rules/triage_rules.json:
+
+{
+  "whitelist": {
+    "users": ["vuln_scanner", "backup_service"],
+    "source_ips": ["192.168.1.200"],
+    "assets": ["SCANNER-01", "BACKUP-SERVER"]
+  },
+  "severity_weights": {
+    "CRITICAL": 10,
+    "HIGH": 7,
+    "MEDIUM": 4,
+    "LOW": 1
+  },
+  "alert_type_weights": {
+    "Malware Detection": 10,
+    "Data Exfiltration": 8,
+    "Suspicious DNS Query": 6,
+    "Failed Login Attempt": 5,
+    "Port Scan": 2
+  }
+}
+Task 2: Building the Core Triage Engine
+Step 2.1: Create the Main Triage Script
+Create scripts/incident_triage.py with the following starter template:
+
+#!/usr/bin/env python3
+"""
+Incident Triage Automation Script
+Students: Complete the TODO sections to implement triage logic
+"""
+
+import json
+import datetime
+from typing import List, Dict, Any
+
+class IncidentTriageEngine:
+    def __init__(self, rules_file: str):
+        """Initialize the triage engine with rules configuration"""
+        self.rules = self.load_rules(rules_file)
+        self.processed_alerts = []
+        self.false_positives = []
+        self.high_priority_alerts = []
+        
+    def load_rules(self, rules_file: str) -> Dict[str, Any]:
+        """
+        Load triage rules from JSON file
+        
+        Returns:
+            Dictionary containing whitelist, severity_weights, and alert_type_weights
+        """
+        # TODO: Open and read the JSON rules file
+        # TODO: Return the parsed JSON data
+        # TODO: Handle FileNotFoundError and return default rules
+        pass
+    
+    def load_alerts(self, alerts_file: str) -> List[Dict[str, Any]]:
+        """
+        Load alerts from JSON file
+        
+        Returns:
+            List of alert dictionaries
+        """
+        # TODO: Open and read the JSON alerts file
+        # TODO: Return the parsed alert list
+        # TODO: Handle FileNotFoundError
+        pass
+    
+    def is_whitelisted(self, alert: Dict[str, Any]) -> bool:
+        """
+        Check if alert matches whitelist criteria
+        
+        Args:
+            alert: Alert dictionary to check
+            
+        Returns:
+            True if whitelisted, False otherwise
+        """
+        # TODO: Get whitelist from self.rules
+        # TODO: Check if alert['user'] is in whitelist['users']
+        # TODO: Check if alert['source_ip'] is in whitelist['source_ips']
+        # TODO: Check if alert['asset'] is in whitelist['assets']
+        # TODO: Return True if any match, False otherwise
+        pass
+    
+    def calculate_priority_score(self, alert: Dict[str, Any]) -> int:
+        """
+        Calculate priority score for an alert
+        
+        Args:
+            alert: Alert dictionary
+            
+        Returns:
+            Integer priority score
+        """
+        score = 0
+        
+        # TODO: Add severity weight from self.rules['severity_weights']
+        # TODO: Add alert type weight from self.rules['alert_type_weights']
+        # TODO: Add bonus points if event_count > 10 (add 2 points)
+        # TODO: Add bonus points if source_ip is external (not 192.168.*, 10.*, 172.16.*)
+        
+        return score
+    
+    def triage_alert(self, alert: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Perform triage analysis on a single alert
+        
+        Args:
+            alert: Alert dictionary to triage
+            
+        Returns:
+            Alert dictionary with triage results added
+        """
+        triage_result = alert.copy()
+        triage_result['triage_timestamp'] = datetime.datetime.now().isoformat()
+        
+        # TODO: Check if alert is whitelisted using is_whitelisted()
+        # TODO: If whitelisted, set triage_status to 'FALSE_POSITIVE'
+        # TODO: If not whitelisted, calculate priority score
+        # TODO: Set triage_status to 'LEGITIMATE'
+        # TODO: Assign priority_level based on score:
+        #       >= 15: CRITICAL, >= 10: HIGH, >= 5: MEDIUM, else: LOW
+        
+        return triage_result
+    
+    def process_alerts(self, alerts: List[Dict[str, Any]]) -> None:
+        """
+        Process all alerts through triage engine
+        
+        Args:
+            alerts: List of alert dictionaries
+        """
+        print(f"Processing {len(alerts)} alerts...")
+        
+        # TODO: Loop through each alert
+        # TODO: Call triage_alert() on each alert
+        # TODO: Append result to self.processed_alerts
+        # TODO: If FALSE_POSITIVE, append to self.false_positives
+        # TODO: If priority_level is CRITICAL or HIGH, append to self.high_priority_alerts
+        
+        print(f"Triage complete. Found {len(self.false_positives)} false positives")
+    
+    def generate_summary_report(self) -> str:
+        """
+        Generate a summary report of triage results
+        
+        Returns:
+            Formatted string report
+        """
+        # TODO: Count total alerts, false positives, legitimate alerts
+        # TODO: Count alerts by priority level (CRITICAL, HIGH, MEDIUM, LOW)
+        # TODO: Format a report string with statistics
+        # TODO: Include details of high priority alerts
+        # TODO: Return the formatted report
+        pass
+    
+    def save_results(self, output_dir: str) -> None:
+        """
+        Save triage results to JSON files
+        
+        Args:
+            output_dir: Directory to save results
+        """
+        # TODO: Save self.processed_alerts to processed_alerts.json
+        # TODO: Save self.false_positives to false_positives.json
+        # TODO: Save self.high_priority_alerts to high_priority_alerts.json
+        # TODO: Save summary report to triage_summary.txt
+        pass
+
+def main():
+    """Main function to run the incident triage automation"""
+    print("=== Incident Triage Automation System ===")
+    
+    # TODO: Initialize IncidentTriageEngine with rules file path
+    # TODO: Load alerts from data file
+    # TODO: Process alerts
+    # TODO: Print summary report
+    # TODO: Save results to reports directory
+    
+    print("\nTriage automation complete!")
+
+if __name__ == "__main__":
+    main()
+Step 2.2: Test Your Implementation
+chmod +x scripts/incident_triage.py
+python3 scripts/incident_triage.py
+Expected behavior:
+
+Loads 5 sample alerts
+Identifies whitelisted alerts as false positives
+Calculates priority scores for legitimate alerts
+Generates summary report
+Saves results to reports directory
+Task 3: Implementing Alert Enrichment
+Step 3.1: Create Alert Enrichment Module
+Create scripts/alert_enrichment.py:
+
+#!/usr/bin/env python3
+"""
+Alert Enrichment Module
+Adds contextual information to alerts
+"""
+
+import json
+import re
+from typing import Dict, Any
+
+class AlertEnricher:
+    def __init__(self):
+        """Initialize enrichment engine with threat intelligence data"""
+        self.threat_intel = self.load_threat_intel()
+        
+    def load_threat_intel(self) -> Dict[str, Any]:
+        """
+        Load threat intelligence data
+        
+        Returns:
+            Dictionary with known malicious IPs, domains, etc.
+        """
+        # TODO: Create a dictionary with known malicious indicators
+        # TODO: Include lists of malicious IPs, domains, file hashes
+        # TODO: Return the threat intelligence dictionary
+        pass
+    
+    def check_ip_reputation(self, ip_address: str) -> Dict[str, Any]:
+        """
+        Check IP address reputation
+        
+        Args:
+            ip_address: IP address to check
+            
+        Returns:
+            Dictionary with reputation info (is_malicious, threat_level, description)
+        """
+        # TODO: Check if IP is in threat_intel malicious IPs
+        # TODO: Determine if IP is internal (192.168.*, 10.*, 172.16.*)
+        # TODO: Return reputation dictionary with is_malicious, threat_level, description
+        pass
+    
+    def enrich_alert(self, alert: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Enrich alert with additional context
+        
+        Args:
+            alert: Alert dictionary to enrich
+            
+        Returns:
+            Enriched alert dictionary
+        """
+        enriched = alert.copy()
+        
+        # TODO: Check source IP reputation
+        # TODO: Check destination IP reputation
+        # TODO: Add enrichment data to alert
+        # TODO: Add is_external_threat flag
+        # TODO: Add threat_indicators list
+        
+        return enriched
+    
+    def enrich_alert_batch(self, alerts: list) -> list:
+        """
+        Enrich multiple alerts
+        
+        Args:
+            alerts: List of alert dictionaries
+            
+        Returns:
+            List of enriched alerts
+        """
+        # TODO: Loop through alerts and enrich each one
+        # TODO: Return list of enriched alerts
+        pass
+
+def main():
+    """Test alert enrichment"""
+    # TODO: Initialize AlertEnricher
+    # TODO: Load sample alerts
+    # TODO: Enrich alerts
+    # TODO: Print enriched results
+    pass
+
+if __name__ == "__main__":
+    main()
+Step 3.2: Integrate Enrichment with Triage
+Modify your incident_triage.py to use enrichment:
+
+# Add to imports
+from alert_enrichment import AlertEnricher
+
+# In IncidentTriageEngine.__init__:
+self.enricher = AlertEnricher()
+
+# In process_alerts method, before triaging:
+enriched_alert = self.enricher.enrich_alert(alert)
+triaged_alert = self.triage_alert(enriched_alert)
+Task 4: Building an Automated Response System
+Step 4.1: Create Response Automation Script
+Create scripts/automated_response.py:
+
+#!/usr/bin/env python3
+"""
+Automated Response System
+Takes actions based on triage results
+"""
+
+import json
+from typing import Dict, Any, List
+
+class AutomatedResponder:
+    def __init__(self):
+        """Initialize automated response system"""
+        self.response_log = []
+        
+    def generate_response_actions(self, alert: Dict[str, Any]) -> List[str]:
+        """
+        Generate appropriate response actions for an alert
+        
+        Args:
+            alert: Triaged alert dictionary
+            
+        Returns:
+            List of recommended actions
+        """
+        actions = []
+        
+        # TODO: Based on priority_level, generate actions
+        # TODO: CRITICAL: Isolate host, notify SOC, create ticket
+        # TODO: HIGH: Notify analyst, create ticket, collect forensics
+        # TODO: MEDIUM: Create ticket, add to investigation queue
+        # TODO: LOW: Log for review
+        # TODO: Return list of actions
+        
+        return actions
+    
+    def create_incident_ticket(self, alert: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Create incident ticket from alert
+        
+        Args:
+            alert: Alert dictionary
+            
+        Returns:
+            Ticket dictionary with ticket_id, title, description, priority
+        """
+        # TODO: Generate unique ticket ID
+        # TODO: Create ticket title from alert_type
+        # TODO: Format description with alert details
+        # TODO: Set priority based on alert priority_level
+        # TODO: Return ticket dictionary
+        pass
+    
+    def generate_notification(self, alert: Dict[str, Any]) -> str:
+        """
+        Generate notification message for alert
+        
+        Args:
+            alert: Alert dictionary
+            
+        Returns:
+            Formatted notification string
+        """
+        # TODO: Format notification with alert details
+        # TODO: Include priority, alert type, affected asset
+        # TODO: Include recommended actions
+        # TODO: Return formatted message
+        pass
+    
+    def process_high_priority_alerts(self, alerts: List[Dict[str, Any]]) -> None:
+        """
+        Process high priority alerts and take automated actions
+        
+        Args:
+            alerts: List of high priority alerts
+        """
+        # TODO: Loop through high priority alerts
+        # TODO: Generate response actions for each
+        # TODO: Create incident tickets
+        # TODO: Generate notifications
+        # TODO: Log all actions taken
+        pass
+    
+    def save_response_log(self, output_file: str) -> None:
+        """
+        Save response actions log
+        
+        Args:
+            output_file: Path to save log file
+        """
+        # TODO: Save self.response_log to JSON file
+        pass
+
+def main():
+    """Test automated response system"""
+    # TODO: Initialize AutomatedResponder
+    # TODO: Load high priority alerts from triage results
+    # TODO: Process alerts and generate responses
+    # TODO: Save response log
+    pass
+
+if __name__ == "__main__":
+    main()
+Step 4.2: Create Complete Workflow Script
+Create scripts/complete_workflow.py:
+
+#!/usr/bin/env python3
+"""
+Complete Incident Triage Workflow
+Integrates triage, enrichment, and response
+"""
+
+from incident_triage import IncidentTriageEngine
+from alert_enrichment import AlertEnricher
+from automated_response import AutomatedResponder
+
+def run_complete_workflow():
+    """Execute complete incident triage workflow"""
+    print("=== Complete Incident Triage Workflow ===\n")
+    
+    # TODO: Step 1 - Initialize all components
+    # TODO: Step 2 - Load and enrich alerts
+    # TODO: Step 3 - Perform triage
+    # TODO: Step 4 - Generate automated responses
+    # TODO: Step 5 - Save all results and reports
+    # TODO: Step 6 - Print workflow summary
+    
+    pass
+
+if __name__ == "__main__":
+    run_complete_workflow()
+Expected Outcomes
+After completing this lab, you should have:
+
+Functional triage engine that processes alerts and identifies false positives
+Priority scoring system that ranks alerts by severity and context
+Alert enrichment adding threat intelligence to alerts
+Automated response system generating actions for high-priority incidents
+Complete workflow integrating all components
+Sample output statistics:
+
+Total alerts processed: 5
+False positives identified: 2 (40%)
+High priority alerts: 2
+Automated tickets created: 2
+Response actions generated: 6
+Troubleshooting Tips
+Issue: JSON parsing errors
+
+Verify JSON syntax with python3 -m json.tool data/sample_alerts.json
+Check for missing commas, brackets, or quotes
+Ensure proper UTF-8 encoding
+Issue: Priority scores seem incorrect
+
+Review severity_weights and alert_type_weights in rules
+Verify calculation logic includes all factors
+Print intermediate score values for debugging
+Issue: All alerts marked as false positives
+
+Check whitelist configuration is not too broad
+Verify is_whitelisted() logic checks correct fields
+Test with alerts that should not match whitelist
+Issue: File not found errors
+
+Verify working directory is ~/incident_triage_lab
+Check file paths are relative to working directory
+Use absolute paths if needed: os.path.join(os.getcwd(), 'data', 'file.json')
+Conclusion
+This lab demonstrated practical incident triage automation using Python. You implemented:
+
+Rule-based filtering to reduce false positives and analyst workload
+Priority scoring to focus on critical threats first
+Alert enrichment to add context from threat intelligence
+Automated responses to accelerate incident handling
+These techniques are essential for modern Security Operations Centers (SOCs) dealing with high alert volumes. The modular design allows easy extension with additional data sources, machine learning models, or integration with SIEM platforms.
+
+Next steps for enhancement:
+
+Add machine learning for anomaly detection
+Integrate with real SIEM APIs (Splunk, ELK, QRadar)
+Implement user behavior analytics (UBA)
+Add automated forensics collection
+Create dashboard visualization of triage metrics
