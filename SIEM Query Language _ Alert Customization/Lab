@@ -1,0 +1,801 @@
+SIEM Query Language & Alert Customization
+Objectives
+By the end of this lab, students will be able to:
+
+Understand the fundamentals of SIEM query languages and their syntax
+Write custom queries in Wazuh to detect specific security threats
+Create and configure custom alert rules based on security events
+Automate alert generation for various threat scenarios
+Customize alert severity levels and response actions
+Implement query optimization techniques for better performance
+Validate and test custom queries and alerts in a controlled environment
+Prerequisites
+Before starting this lab, students should have:
+
+Basic understanding of Linux command line operations
+Fundamental knowledge of log analysis and security events
+Basic familiarity with JSON format and structure
+Understanding of common security threats and attack patterns
+Knowledge of regular expressions (helpful but not mandatory)
+Lab Environment
+Al Nafi Cloud Machine Setup: This lab runs entirely on a single Linux-based cloud machine provided by Al Nafi. Simply click Start Lab to access your pre-configured environment. No additional VM setup or external machines are required.
+
+The lab environment includes:
+
+Ubuntu 20.04 LTS with Wazuh installed
+Pre-configured log sources and sample data
+All necessary tools and dependencies
+Sample security events for testing
+Task 1: Understanding Wazuh Query Language Basics
+Subtask 1.1: Explore Wazuh Query Structure
+First, let's familiarize ourselves with the Wazuh environment and understand how queries work.
+
+Access the Wazuh dashboard:
+sudo systemctl status wazuh-manager
+sudo systemctl start wazuh-manager
+sudo systemctl start wazuh-indexer
+sudo systemctl start wazuh-dashboard
+Navigate to the query interface:
+# Open browser and go to localhost:5601
+# Default credentials: admin/admin
+firefox http://localhost:5601 &
+Examine the basic query structure:
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "rule.level": "10"
+          }
+        }
+      ]
+    }
+  }
+}
+Subtask 1.2: Create Your First Custom Query
+Let's create a simple query to find failed login attempts:
+
+Create a basic failed login query:
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "rule.groups": "authentication_failed"
+          }
+        },
+        {
+          "range": {
+            "@timestamp": {
+              "gte": "now-1h"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+Save this query as a file:
+cat > /tmp/failed_login_query.json << 'EOF'
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "rule.groups": "authentication_failed"
+          }
+        },
+        {
+          "range": {
+            "@timestamp": {
+              "gte": "now-1h"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+EOF
+Subtask 1.3: Test Query Execution
+Execute the query using curl:
+curl -X POST "localhost:9200/wazuh-alerts-*/_search" \
+  -H "Content-Type: application/json" \
+  -u admin:admin \
+  -d @/tmp/failed_login_query.json
+Create a script to test queries easily:
+cat > /tmp/test_query.sh << 'EOF'
+#!/bin/bash
+QUERY_FILE=$1
+if [ -z "$QUERY_FILE" ]; then
+    echo "Usage: $0 <query_file.json>"
+    exit 1
+fi
+
+curl -X POST "localhost:9200/wazuh-alerts-*/_search" \
+  -H "Content-Type: application/json" \
+  -u admin:admin \
+  -d @"$QUERY_FILE" | jq '.'
+EOF
+
+chmod +x /tmp/test_query.sh
+Task 2: Writing Advanced Custom Queries
+Subtask 2.1: Create Queries for Specific Threat Detection
+Let's create more sophisticated queries for different types of security threats.
+
+Brute Force Attack Detection Query:
+cat > /tmp/brute_force_query.json << 'EOF'
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "rule.groups": "authentication_failed"
+          }
+        },
+        {
+          "range": {
+            "@timestamp": {
+              "gte": "now-10m"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "aggs": {
+    "source_ips": {
+      "terms": {
+        "field": "data.srcip.keyword",
+        "size": 10
+      },
+      "aggs": {
+        "failed_attempts": {
+          "value_count": {
+            "field": "rule.id"
+          }
+        }
+      }
+    }
+  }
+}
+EOF
+Suspicious File Access Query:
+cat > /tmp/file_access_query.json << 'EOF'
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "rule.groups": "syscheck"
+          }
+        },
+        {
+          "wildcard": {
+            "syscheck.path.keyword": "*passwd*"
+          }
+        },
+        {
+          "range": {
+            "@timestamp": {
+              "gte": "now-1h"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "sort": [
+    {
+      "@timestamp": {
+        "order": "desc"
+      }
+    }
+  ]
+}
+EOF
+Network Anomaly Detection Query:
+cat > /tmp/network_anomaly_query.json << 'EOF'
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "range": {
+            "rule.level": {
+              "gte": 7
+            }
+          }
+        },
+        {
+          "match": {
+            "rule.groups": "firewall"
+          }
+        },
+        {
+          "range": {
+            "@timestamp": {
+              "gte": "now-30m"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "aggs": {
+    "top_blocked_ips": {
+      "terms": {
+        "field": "data.srcip.keyword",
+        "size": 5
+      }
+    }
+  }
+}
+EOF
+Subtask 2.2: Test Advanced Queries
+Test each query and analyze results:
+echo "Testing Brute Force Query..."
+/tmp/test_query.sh /tmp/brute_force_query.json > /tmp/brute_force_results.json
+
+echo "Testing File Access Query..."
+/tmp/test_query.sh /tmp/file_access_query.json > /tmp/file_access_results.json
+
+echo "Testing Network Anomaly Query..."
+/tmp/test_query.sh /tmp/network_anomaly_query.json > /tmp/network_anomaly_results.json
+Create a query validation script:
+cat > /tmp/validate_query.sh << 'EOF'
+#!/bin/bash
+QUERY_FILE=$1
+
+if [ ! -f "$QUERY_FILE" ]; then
+    echo "Query file not found: $QUERY_FILE"
+    exit 1
+fi
+
+# Validate JSON syntax
+if ! jq empty "$QUERY_FILE" 2>/dev/null; then
+    echo "Invalid JSON syntax in $QUERY_FILE"
+    exit 1
+fi
+
+# Test query execution
+RESULT=$(curl -s -X POST "localhost:9200/wazuh-alerts-*/_search" \
+  -H "Content-Type: application/json" \
+  -u admin:admin \
+  -d @"$QUERY_FILE")
+
+if echo "$RESULT" | jq -e '.error' > /dev/null; then
+    echo "Query execution failed:"
+    echo "$RESULT" | jq '.error'
+    exit 1
+else
+    echo "Query validation successful for $QUERY_FILE"
+    echo "Total hits: $(echo "$RESULT" | jq '.hits.total.value')"
+fi
+EOF
+
+chmod +x /tmp/validate_query.sh
+Task 3: Creating Custom Alert Rules
+Subtask 3.1: Understanding Wazuh Rule Structure
+Examine existing rules:
+ls /var/ossec/etc/rules/
+head -20 /var/ossec/etc/rules/0020-syslog_rules.xml
+Create a custom rules directory:
+sudo mkdir -p /var/ossec/etc/rules/custom
+sudo chown ossec:ossec /var/ossec/etc/rules/custom
+Subtask 3.2: Create Custom Alert Rules
+Create a rule for multiple failed logins:
+sudo tee /var/ossec/etc/rules/custom/100-custom_auth_rules.xml << 'EOF'
+<group name="custom,authentication,">
+  
+  <!-- Rule for detecting brute force attacks -->
+  <rule id="100001" level="10">
+    <if_matched_sid>5503</if_matched_sid>
+    <same_source_ip />
+    <description>Multiple authentication failures from same source IP</description>
+    <options>no_email_alert</options>
+    <group>authentication_failures,brute_force,</group>
+  </rule>
+
+  <!-- Rule for detecting successful login after failures -->
+  <rule id="100002" level="8">
+    <if_matched_sid>5501</if_matched_sid>
+    <same_source_ip />
+    <description>Successful authentication after multiple failures</description>
+    <group>authentication_success,potential_compromise,</group>
+  </rule>
+
+  <!-- Rule for detecting root login attempts -->
+  <rule id="100003" level="12">
+    <if_matched_sid>5503</if_matched_sid>
+    <user>root</user>
+    <description>Failed root login attempt detected</description>
+    <group>authentication_failures,root_access,</group>
+  </rule>
+
+</group>
+EOF
+Create rules for file system monitoring:
+sudo tee /var/ossec/etc/rules/custom/101-custom_syscheck_rules.xml << 'EOF'
+<group name="custom,syscheck,">
+  
+  <!-- Rule for critical file modifications -->
+  <rule id="101001" level="12">
+    <if_matched_sid>550</if_matched_sid>
+    <field name="file">/etc/passwd|/etc/shadow|/etc/sudoers</field>
+    <description>Critical system file modified: $(file)</description>
+    <group>syscheck,critical_files,</group>
+  </rule>
+
+  <!-- Rule for suspicious binary execution -->
+  <rule id="101002" level="10">
+    <if_matched_sid>550</if_matched_sid>
+    <field name="file">/tmp/|/var/tmp/</field>
+    <field name="file">\.sh$|\.py$|\.pl$</field>
+    <description>Suspicious script execution in temporary directory: $(file)</description>
+    <group>syscheck,suspicious_execution,</group>
+  </rule>
+
+</group>
+EOF
+Create network-based alert rules:
+sudo tee /var/ossec/etc/rules/custom/102-custom_network_rules.xml << 'EOF'
+<group name="custom,firewall,">
+  
+  <!-- Rule for port scanning detection -->
+  <rule id="102001" level="8">
+    <if_matched_sid>4001</if_matched_sid>
+    <same_source_ip />
+    <description>Potential port scan detected from $(srcip)</description>
+    <group>firewall,port_scan,</group>
+  </rule>
+
+  <!-- Rule for repeated connection attempts -->
+  <rule id="102002" level="10">
+    <if_matched_sid>4003</if_matched_sid>
+    <same_source_ip />
+    <description>Multiple connection attempts blocked from $(srcip)</description>
+    <group>firewall,connection_flood,</group>
+  </rule>
+
+</group>
+EOF
+Subtask 3.3: Configure Rule Loading
+Update the main configuration to include custom rules:
+sudo cp /var/ossec/etc/ossec.conf /var/ossec/etc/ossec.conf.backup
+
+# Add custom rules to configuration
+sudo sed -i '/<rules>/a\    <include>custom/100-custom_auth_rules.xml</include>' /var/ossec/etc/ossec.conf
+sudo sed -i '/<rules>/a\    <include>custom/101-custom_syscheck_rules.xml</include>' /var/ossec/etc/ossec.conf
+sudo sed -i '/<rules>/a\    <include>custom/102-custom_network_rules.xml</include>' /var/ossec/etc/ossec.conf
+Validate rule syntax:
+sudo /var/ossec/bin/wazuh-logtest -t
+Restart Wazuh to load new rules:
+sudo systemctl restart wazuh-manager
+sudo systemctl status wazuh-manager
+Task 4: Automating Alert Generation
+Subtask 4.1: Create Alert Automation Scripts
+Create a script to generate test events:
+cat > /tmp/generate_test_events.sh << 'EOF'
+#!/bin/bash
+
+echo "Generating test authentication failure events..."
+for i in {1..5}; do
+    logger -p auth.info "sshd[1234]: Failed password for user testuser from 192.168.1.100 port 22 ssh2"
+    sleep 1
+done
+
+echo "Generating test file modification events..."
+touch /tmp/test_critical_file
+echo "test content" > /tmp/test_critical_file
+rm /tmp/test_critical_file
+
+echo "Test events generated successfully"
+EOF
+
+chmod +x /tmp/generate_test_events.sh
+Create an alert monitoring script:
+cat > /tmp/monitor_alerts.sh << 'EOF'
+#!/bin/bash
+
+ALERT_LOG="/var/ossec/logs/alerts/alerts.log"
+CUSTOM_ALERT_LOG="/tmp/custom_alerts.log"
+
+echo "Monitoring custom alerts... (Press Ctrl+C to stop)"
+echo "Custom alerts will be logged to: $CUSTOM_ALERT_LOG"
+
+tail -f "$ALERT_LOG" | while read line; do
+    if echo "$line" | grep -E "(Rule: 100|Rule: 101|Rule: 102)" > /dev/null; then
+        echo "$(date): $line" | tee -a "$CUSTOM_ALERT_LOG"
+    fi
+done
+EOF
+
+chmod +x /tmp/monitor_alerts.sh
+Subtask 4.2: Implement Alert Response Actions
+Create an alert response script:
+cat > /tmp/alert_response.sh << 'EOF'
+#!/bin/bash
+
+RULE_ID=$1
+ALERT_LEVEL=$2
+SOURCE_IP=$3
+DESCRIPTION=$4
+
+case $RULE_ID in
+    100001|100003)
+        echo "CRITICAL: Authentication attack detected from $SOURCE_IP"
+        echo "Action: Blocking IP address"
+        # In production, you would implement actual IP blocking here
+        echo "iptables -A INPUT -s $SOURCE_IP -j DROP" >> /tmp/blocked_ips.log
+        ;;
+    101001)
+        echo "CRITICAL: Critical file modification detected"
+        echo "Action: Creating backup and alerting administrator"
+        echo "$(date): Critical file alert - $DESCRIPTION" >> /tmp/critical_file_alerts.log
+        ;;
+    102001|102002)
+        echo "WARNING: Network anomaly detected from $SOURCE_IP"
+        echo "Action: Increasing monitoring for this IP"
+        echo "$(date): Network alert - $DESCRIPTION" >> /tmp/network_alerts.log
+        ;;
+    *)
+        echo "INFO: Custom alert triggered - Rule ID: $RULE_ID"
+        ;;
+esac
+EOF
+
+chmod +x /tmp/alert_response.sh
+Create an automated alert processor:
+cat > /tmp/process_alerts.sh << 'EOF'
+#!/bin/bash
+
+ALERT_LOG="/var/ossec/logs/alerts/alerts.log"
+PROCESSED_ALERTS="/tmp/processed_alerts.log"
+
+process_alert() {
+    local alert_line="$1"
+    
+    # Extract rule ID
+    RULE_ID=$(echo "$alert_line" | grep -oP 'Rule: \K\d+')
+    
+    # Extract alert level
+    ALERT_LEVEL=$(echo "$alert_line" | grep -oP 'Level: \K\d+')
+    
+    # Extract source IP if present
+    SOURCE_IP=$(echo "$alert_line" | grep -oP 'srcip: \K[0-9.]+' || echo "N/A")
+    
+    # Extract description
+    DESCRIPTION=$(echo "$alert_line" | grep -oP 'Description: \K.*' || echo "No description")
+    
+    if [[ $RULE_ID =~ ^(100|101|102) ]]; then
+        echo "Processing custom alert: Rule $RULE_ID, Level $ALERT_LEVEL"
+        /tmp/alert_response.sh "$RULE_ID" "$ALERT_LEVEL" "$SOURCE_IP" "$DESCRIPTION"
+        echo "$(date): Processed Rule $RULE_ID - $DESCRIPTION" >> "$PROCESSED_ALERTS"
+    fi
+}
+
+echo "Starting automated alert processing..."
+tail -f "$ALERT_LOG" | while read line; do
+    if echo "$line" | grep -E "Rule: (100|101|102)" > /dev/null; then
+        process_alert "$line"
+    fi
+done
+EOF
+
+chmod +x /tmp/process_alerts.sh
+Subtask 4.3: Test Alert Automation
+Start the alert monitoring in background:
+/tmp/monitor_alerts.sh &
+MONITOR_PID=$!
+Start the alert processor in background:
+/tmp/process_alerts.sh &
+PROCESSOR_PID=$!
+Generate test events and observe alerts:
+echo "Generating test events..."
+/tmp/generate_test_events.sh
+
+# Wait for alerts to be processed
+sleep 10
+
+echo "Checking generated alerts..."
+if [ -f /tmp/custom_alerts.log ]; then
+    echo "Custom alerts detected:"
+    cat /tmp/custom_alerts.log
+else
+    echo "No custom alerts generated yet"
+fi
+
+echo "Checking processed alerts..."
+if [ -f /tmp/processed_alerts.log ]; then
+    echo "Processed alerts:"
+    cat /tmp/processed_alerts.log
+else
+    echo "No alerts processed yet"
+fi
+Clean up background processes:
+kill $MONITOR_PID $PROCESSOR_PID 2>/dev/null
+Task 5: Query Optimization and Performance
+Subtask 5.1: Optimize Query Performance
+Create a performance testing script:
+cat > /tmp/query_performance.sh << 'EOF'
+#!/bin/bash
+
+QUERY_FILE=$1
+ITERATIONS=${2:-5}
+
+if [ -z "$QUERY_FILE" ]; then
+    echo "Usage: $0 <query_file.json> [iterations]"
+    exit 1
+fi
+
+echo "Testing query performance for: $QUERY_FILE"
+echo "Iterations: $ITERATIONS"
+
+total_time=0
+for i in $(seq 1 $ITERATIONS); do
+    start_time=$(date +%s.%N)
+    
+    curl -s -X POST "localhost:9200/wazuh-alerts-*/_search" \
+      -H "Content-Type: application/json" \
+      -u admin:admin \
+      -d @"$QUERY_FILE" > /dev/null
+    
+    end_time=$(date +%s.%N)
+    execution_time=$(echo "$end_time - $start_time" | bc)
+    total_time=$(echo "$total_time + $execution_time" | bc)
+    
+    echo "Iteration $i: ${execution_time}s"
+done
+
+average_time=$(echo "scale=3; $total_time / $ITERATIONS" | bc)
+echo "Average execution time: ${average_time}s"
+EOF
+
+chmod +x /tmp/query_performance.sh
+Create optimized versions of queries:
+cat > /tmp/optimized_brute_force_query.json << 'EOF'
+{
+  "size": 0,
+  "query": {
+    "bool": {
+      "filter": [
+        {
+          "term": {
+            "rule.groups.keyword": "authentication_failed"
+          }
+        },
+        {
+          "range": {
+            "@timestamp": {
+              "gte": "now-10m"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "aggs": {
+    "source_ips": {
+      "terms": {
+        "field": "data.srcip.keyword",
+        "size": 10,
+        "min_doc_count": 3
+      }
+    }
+  }
+}
+EOF
+Subtask 5.2: Compare Query Performance
+Test original vs optimized queries:
+echo "Testing original brute force query..."
+/tmp/query_performance.sh /tmp/brute_force_query.json
+
+echo "Testing optimized brute force query..."
+/tmp/query_performance.sh /tmp/optimized_brute_force_query.json
+Create a query optimization guide:
+cat > /tmp/query_optimization_tips.md << 'EOF'
+# Wazuh Query Optimization Tips
+
+## 1. Use Filters Instead of Queries
+- Use `filter` context for exact matches
+- Use `query` context only for relevance scoring
+
+## 2. Limit Result Size
+- Use `size: 0` for aggregation-only queries
+- Specify appropriate `size` values for result queries
+
+## 3. Use Appropriate Field Types
+- Use `.keyword` fields for exact matches
+- Use analyzed fields for full-text search
+
+## 4. Optimize Time Ranges
+- Use specific time ranges instead of open-ended queries
+- Consider using `now-1h` instead of `now-1d` when possible
+
+## 5. Efficient Aggregations
+- Use `min_doc_count` to filter out low-frequency results
+- Limit aggregation size with appropriate `size` parameter
+
+## 6. Index Patterns
+- Use specific index patterns instead of wildcards when possible
+- Consider time-based index patterns for better performance
+EOF
+Task 6: Validation and Testing
+Subtask 6.1: Create Comprehensive Test Suite
+Create a test validation script:
+cat > /tmp/validate_lab_setup.sh << 'EOF'
+#!/bin/bash
+
+echo "=== Lab 18 Validation Script ==="
+echo
+
+# Test 1: Check Wazuh services
+echo "1. Checking Wazuh services..."
+if systemctl is-active --quiet wazuh-manager; then
+    echo "   ✓ Wazuh Manager is running"
+else
+    echo "   ✗ Wazuh Manager is not running"
+fi
+
+if systemctl is-active --quiet wazuh-indexer; then
+    echo "   ✓ Wazuh Indexer is running"
+else
+    echo "   ✗ Wazuh Indexer is not running"
+fi
+
+# Test 2: Validate custom rules
+echo "2. Validating custom rules..."
+if [ -f /var/ossec/etc/rules/custom/100-custom_auth_rules.xml ]; then
+    echo "   ✓ Authentication rules created"
+else
+    echo "   ✗ Authentication rules missing"
+fi
+
+if [ -f /var/ossec/etc/rules/custom/101-custom_syscheck_rules.xml ]; then
+    echo "   ✓ Syscheck rules created"
+else
+    echo "   ✗ Syscheck rules missing"
+fi
+
+# Test 3: Test query execution
+echo "3. Testing query execution..."
+if curl -s -X GET "localhost:9200/_cluster/health" -u admin:admin | grep -q "green\|yellow"; then
+    echo "   ✓ Elasticsearch cluster is accessible"
+else
+    echo "   ✗ Elasticsearch cluster is not accessible"
+fi
+
+# Test 4: Validate scripts
+echo "4. Validating created scripts..."
+scripts=("/tmp/test_query.sh" "/tmp/validate_query.sh" "/tmp/generate_test_events.sh" "/tmp/monitor_alerts.sh")
+for script in "${scripts[@]}"; do
+    if [ -x "$script" ]; then
+        echo "   ✓ $(basename $script) is executable"
+    else
+        echo "   ✗ $(basename $script) is missing or not executable"
+    fi
+done
+
+echo
+echo "=== Validation Complete ==="
+EOF
+
+chmod +x /tmp/validate_lab_setup.sh
+Run the validation:
+/tmp/validate_lab_setup.sh
+Subtask 6.2: Create Final Test Scenarios
+Create a comprehensive test scenario:
+cat > /tmp/final_test_scenario.sh << 'EOF'
+#!/bin/bash
+
+echo "=== Final Test Scenario for Lab 18 ==="
+echo
+
+# Scenario 1: Brute Force Attack Simulation
+echo "Scenario 1: Simulating brute force attack..."
+for i in {1..10}; do
+    logger -p auth.info "sshd[$(($RANDOM + 1000))]: Failed password for admin from 10.0.0.50 port 22 ssh2"
+    sleep 0.5
+done
+echo "   Brute force simulation complete"
+
+# Scenario 2: Critical File Access
+echo "Scenario 2: Simulating critical file access..."
+sudo touch /etc/test_passwd_access
+sudo rm /etc/test_passwd_access
+echo "   Critical file access simulation complete"
+
+# Scenario 3: Query Testing
+echo "Scenario 3: Testing custom queries..."
+if [ -f /tmp/brute_force_query.json ]; then
+    RESULT=$(curl -s -X POST "localhost:9200/wazuh-alerts-*/_search" \
+      -H "Content-Type: application/json" \
+      -u admin:admin \
+      -d @/tmp/brute_force_query.json)
+    
+    HITS=$(echo "$RESULT" | jq -r '.hits.total.value // 0')
+    echo "   Brute force query returned $HITS hits"
+else
+    echo "   ✗ Brute force query file not found"
+fi
+
+# Scenario 4: Alert Processing
+echo "Scenario 4: Checking alert processing..."
+sleep 5  # Wait for alerts to be generated
+
+if [ -f /var/ossec/logs/alerts/alerts.log ]; then
+    RECENT_ALERTS=$(tail -20 /var/ossec/logs/alerts/alerts.log | grep -c "Rule:")
+    echo "   Found $RECENT_ALERTS recent alerts"
+else
+    echo "   ✗ Alert log not found"
+fi
+
+echo
+echo "=== Test Scenario Complete ==="
+echo "Check /tmp/custom_alerts.log and /tmp/processed_alerts.log for detailed results"
+EOF
+
+chmod +x /tmp/final_test_scenario.sh
+Execute the final test:
+/tmp/final_test_scenario.sh
+Troubleshooting Common Issues
+Issue 1: Wazuh Services Not Starting
+# Check service status
+sudo systemctl status wazuh-manager
+sudo systemctl status wazuh-indexer
+
+# Check logs for errors
+sudo tail -f /var/ossec/logs/ossec.log
+sudo journalctl -u wazuh-manager -f
+Issue 2: Query Execution Failures
+# Verify Elasticsearch connectivity
+curl -X GET "localhost:9200/_cluster/health" -u admin:admin
+
+# Check index existence
+curl -X GET "localhost:9200/_cat/indices/wazuh-*" -u admin:admin
+Issue 3: Custom Rules Not Loading
+# Test rule syntax
+sudo /var/ossec/bin/wazuh-logtest -t
+
+# Check configuration
+sudo /var/ossec/bin/wazuh-control info
+
+# Restart services
+sudo systemctl restart wazuh-manager
+Issue 4: No Alerts Generated
+# Check if events are being processed
+sudo tail -f /var/ossec/logs/ossec.log
+
+# Verify rule matching
+echo "test log entry" | sudo /var/ossec/bin/wazuh-logtest
+Conclusion
+In this comprehensive lab, you have successfully:
+
+Mastered SIEM Query Language: You learned the fundamentals of Wazuh query syntax and created complex queries for threat detection
+Developed Custom Alert Rules: You created sophisticated rules for authentication failures, file system monitoring, and network anomalies
+Implemented Alert Automation: You built automated systems to process and respond to security alerts in real-time
+Optimized Query Performance: You learned techniques to improve query execution speed and efficiency
+Created Comprehensive Testing: You developed validation scripts and test scenarios to ensure your SIEM customizations work correctly
+Why This Matters: SIEM customization is crucial for effective cybersecurity operations. Generic rules and queries often miss organization-specific threats or generate too many false positives. By mastering custom query creation and alert automation, you can:
+
+Detect threats specific to your environment
+Reduce false positive alerts through precise rule crafting
+Automate incident response to improve reaction times
+Optimize system performance for large-scale monitoring
+Create tailored security monitoring that aligns with business requirements
+Real-World Applications: The skills you've developed in this lab directly apply to:
+
+SOC (Security Operations Center) analyst roles
+SIEM administrator positions
+Cybersecurity incident response teams
+Threat hunting operations
+Compliance monitoring and reporting
+Next Steps: Continue practicing by creating rules for different attack scenarios, integrating with external threat intelligence feeds, and developing more sophisticated automated response actions. Consider exploring advanced features like machine learning-based anomaly detection and cross-correlation rules for complex attack patterns.
+
+The foundation you've built in SIEM query language and alert customization will serve as a cornerstone for advanced cybersecurity operations and threat detection capabilities.
