@@ -1,0 +1,491 @@
+ System Hardening with Bash Scripts
+Objectives
+By the end of this lab, students will be able to:
+
+Create automated Bash scripts to implement Linux system hardening measures
+Configure firewall rules using UFW and iptables
+Secure SSH configurations through scripting
+Implement user account security policies
+Verify and test system hardening implementations
+Prerequisites
+Basic Linux command line operations
+Familiarity with text editors (nano or vim)
+Understanding of file permissions and ownership
+Basic Bash scripting knowledge
+Access to sudo privileges
+Lab Environment
+Al Nafi provides ready-to-use Linux-based cloud machines for this lab. Click Start Lab to access your pre-configured Ubuntu 20.04 LTS environment with root access via sudo.
+
+Task 1: Create System Hardening Script
+Step 1: Set Up Working Directory
+Create a directory for hardening scripts:
+
+mkdir ~/system-hardening
+cd ~/system-hardening
+Step 2: Create Main Hardening Script Template
+Create the main script file:
+
+nano system_hardening.sh
+Add the following starter template:
+
+#!/bin/bash
+
+# System Hardening Script
+# TODO: Complete each function with proper implementation
+
+# Color codes for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+# Logging function
+log_action() {
+    # TODO: Implement logging with timestamp
+    # TODO: Write to both console and /var/log/system_hardening.log
+    pass
+}
+
+# Check root privileges
+check_root() {
+    # TODO: Check if EUID is 0
+    # TODO: Exit with error if not root
+    pass
+}
+
+# Update system packages
+update_system() {
+    log_action "Updating system packages..."
+    # TODO: Run apt update and apt upgrade
+    # TODO: Check return status and log results
+    pass
+}
+
+# Configure password policies
+configure_password_policy() {
+    log_action "Configuring password policies..."
+    # TODO: Install libpam-pwquality
+    # TODO: Backup /etc/pam.d/common-password
+    # TODO: Set minlen=12, minclass=3 in /etc/security/pwquality.conf
+    # TODO: Set PASS_MAX_DAYS=90, PASS_MIN_DAYS=7 in /etc/login.defs
+    pass
+}
+
+# Disable unnecessary services
+disable_unnecessary_services() {
+    # TODO: Create array of services to disable
+    # TODO: Loop through and disable each service
+    # TODO: Log each action
+    pass
+}
+
+# Configure kernel security parameters
+configure_kernel_parameters() {
+    log_action "Configuring kernel parameters..."
+    # TODO: Backup /etc/sysctl.conf
+    # TODO: Add security parameters:
+    #   - Disable IP forwarding
+    #   - Disable source routing
+    #   - Enable SYN cookies
+    #   - Log martian packets
+    # TODO: Apply with sysctl -p
+    pass
+}
+
+# Secure file permissions
+secure_file_permissions() {
+    # TODO: Set chmod 600 on /etc/shadow and /etc/gshadow
+    # TODO: Set chmod 644 on /etc/passwd and /etc/group
+    # TODO: Secure SSH directory permissions
+    pass
+}
+
+# Main execution
+main() {
+    echo "========================================"
+    echo "    Linux System Hardening Script     "
+    echo "========================================"
+    
+    check_root
+    # TODO: Call all hardening functions
+    # TODO: Log completion message
+}
+
+main "$@"
+Make the script executable:
+
+chmod +x system_hardening.sh
+Step 3: Create User Security Script Template
+Create a user account security script:
+
+nano user_security.sh
+Add the starter template:
+
+#!/bin/bash
+
+# User Account Security Script
+# TODO: Complete implementation
+
+log_action() {
+    echo -e "\033[0;32m[$(date '+%Y-%m-%d %H:%M:%S')] $1\033[0m"
+}
+
+# Check for empty passwords
+check_empty_passwords() {
+    # TODO: Use awk to find users with empty passwords in /etc/shadow
+    # TODO: Lock accounts with passwd -l (except root)
+    # TODO: Log findings
+    pass
+}
+
+# Check for duplicate UIDs
+check_duplicate_uids() {
+    # TODO: Parse /etc/passwd for duplicate UIDs
+    # TODO: Report any duplicates found
+    pass
+}
+
+# Configure account lockout
+configure_account_lockout() {
+    # TODO: Install libpam-modules
+    # TODO: Backup /etc/pam.d/common-auth
+    # TODO: Add pam_tally2 configuration (deny=3, unlock_time=600)
+    pass
+}
+
+# Set password aging for users
+set_password_aging() {
+    # TODO: Get list of regular users (UID >= 1000)
+    # TODO: Use chage to set -M 90 -m 7 -W 14
+    # TODO: Log each user updated
+    pass
+}
+
+main() {
+    # TODO: Check root privileges
+    # TODO: Call all security functions
+    # TODO: Display completion message
+    pass
+}
+
+main "$@"
+Make executable:
+
+chmod +x user_security.sh
+Task 2: Configure Firewall Automation
+Step 1: Create Firewall Configuration Script
+Create the firewall script:
+
+nano firewall_config.sh
+Add the template:
+
+#!/bin/bash
+
+# Firewall Configuration Script
+# TODO: Complete UFW and iptables configuration
+
+log_action() {
+    echo -e "\033[0;32m[$(date '+%Y-%m-%d %H:%M:%S')] $1\033[0m"
+}
+
+check_root() {
+    # TODO: Verify root privileges
+    pass
+}
+
+# Install and configure UFW
+configure_ufw() {
+    log_action "Configuring UFW..."
+    # TODO: Install ufw package
+    # TODO: Reset UFW to defaults
+    # TODO: Set default policies:
+    #   - deny incoming
+    #   - allow outgoing
+    #   - deny forward
+    pass
+}
+
+# Configure basic firewall rules
+configure_basic_rules() {
+    # TODO: Allow SSH (port 22)
+    # TODO: Allow HTTP (port 80) and HTTPS (port 443)
+    # TODO: Allow DNS (port 53/udp)
+    # TODO: Add comments to each rule
+    pass
+}
+
+# Configure rate limiting
+configure_rate_limiting() {
+    # TODO: Use 'ufw limit ssh' for rate limiting
+    # TODO: Block common attack ports (135, 139, 445, 3389)
+    pass
+}
+
+# Enable firewall
+enable_firewall() {
+    # TODO: Enable UFW with --force flag
+    # TODO: Enable logging
+    # TODO: Display status
+    pass
+}
+
+main() {
+    check_root
+    # TODO: Call all configuration functions
+    # TODO: Display completion message
+}
+
+main "$@"
+Make executable:
+
+chmod +x firewall_config.sh
+Step 2: Create Advanced iptables Rules Template
+Create an iptables configuration script:
+
+nano iptables_advanced.sh
+Add the template:
+
+#!/bin/bash
+
+# Advanced iptables Configuration
+# TODO: Implement protection rules
+
+configure_syn_flood_protection() {
+    # TODO: Add iptables rule to limit SYN packets
+    # TODO: Use --limit 1/s --limit-burst 3
+    pass
+}
+
+configure_port_scan_protection() {
+    # TODO: Drop packets with suspicious flag combinations
+    # TODO: Block ALL, NONE, FIN-URG-PSH combinations
+    pass
+}
+
+block_invalid_packets() {
+    # TODO: Drop packets with INVALID state
+    # TODO: Apply to INPUT, FORWARD, and OUTPUT chains
+    pass
+}
+
+save_rules() {
+    # TODO: Install iptables-persistent
+    # TODO: Save rules to /etc/iptables/rules.v4
+    pass
+}
+
+main() {
+    # TODO: Implement all protection functions
+    # TODO: Save and display rules
+}
+
+main "$@"
+Task 3: Secure SSH Configuration
+Step 1: Create SSH Hardening Script
+Create the SSH security script:
+
+nano ssh_hardening.sh
+Add the template:
+
+#!/bin/bash
+
+# SSH Hardening Script
+# TODO: Complete SSH security configuration
+
+backup_ssh_config() {
+    # TODO: Backup /etc/ssh/sshd_config
+    pass
+}
+
+configure_ssh_security() {
+    # TODO: Disable root login (PermitRootLogin no)
+    # TODO: Disable password authentication (PasswordAuthentication no)
+    # TODO: Set MaxAuthTries to 3
+    # TODO: Disable empty passwords (PermitEmptyPasswords no)
+    # TODO: Set ClientAliveInterval to 300
+    # TODO: Set ClientAliveCountMax to 2
+    # TODO: Use Protocol 2 only
+    pass
+}
+
+configure_ssh_banner() {
+    # TODO: Create /etc/ssh/banner file with warning message
+    # TODO: Set Banner /etc/ssh/banner in sshd_config
+    pass
+}
+
+restart_ssh_service() {
+    # TODO: Restart sshd service
+    # TODO: Check service status
+    pass
+}
+
+main() {
+    # TODO: Implement all SSH hardening steps
+    # TODO: Test configuration before restart
+}
+
+main "$@"
+Step 2: Test SSH Configuration
+Create a validation script:
+
+nano validate_ssh.sh
+Add the template:
+
+#!/bin/bash
+
+# SSH Configuration Validator
+# TODO: Verify SSH hardening settings
+
+check_ssh_setting() {
+    local setting=$1
+    local expected=$2
+    # TODO: Use grep to check setting in sshd_config
+    # TODO: Compare with expected value
+    # TODO: Report pass/fail
+    pass
+}
+
+main() {
+    echo "Validating SSH Configuration..."
+    # TODO: Check all critical settings
+    # TODO: Display summary report
+}
+
+main "$@"
+Task 4: Create File System Security Script
+Step 1: Implement File System Hardening
+Create the file system security script:
+
+nano filesystem_security.sh
+Add the template:
+
+#!/bin/bash
+
+# File System Security Script
+# TODO: Complete file system hardening
+
+find_suid_files() {
+    # TODO: Find all SUID files (perm -4000)
+    # TODO: Save to /var/log/security-reports/suid_files.txt
+    # TODO: Display count
+    pass
+}
+
+find_world_writable() {
+    # TODO: Find world-writable files (perm -002)
+    # TODO: Exclude /tmp, /var/tmp, /proc, /sys
+    # TODO: Remove world-write permission
+    pass
+}
+
+secure_temp_directories() {
+    # TODO: Set sticky bit on /tmp and /var/tmp (chmod 1777)
+    # TODO: Clean old files (atime +7 for /tmp, +30 for /var/tmp)
+    pass
+}
+
+setup_aide() {
+    # TODO: Install aide package
+    # TODO: Initialize AIDE database with aideinit
+    # TODO: Move aide.db.new to aide.db
+    pass
+}
+
+main() {
+    # TODO: Create /var/log/security-reports directory
+    # TODO: Execute all security functions
+    # TODO: Display summary
+}
+
+main "$@"
+Task 5: Test and Verify Hardening
+Step 1: Create Verification Script
+Create a comprehensive verification script:
+
+nano verify_hardening.sh
+Add the template:
+
+#!/bin/bash
+
+# System Hardening Verification Script
+# TODO: Verify all hardening measures
+
+verify_password_policy() {
+    # TODO: Check /etc/security/pwquality.conf settings
+    # TODO: Check /etc/login.defs settings
+    # TODO: Report compliance
+    pass
+}
+
+verify_firewall() {
+    # TODO: Check UFW status
+    # TODO: List active rules
+    # TODO: Verify critical ports
+    pass
+}
+
+verify_ssh_config() {
+    # TODO: Check SSH hardening settings
+    # TODO: Verify service is running
+    pass
+}
+
+verify_services() {
+    # TODO: Check that unnecessary services are disabled
+    # TODO: List running services
+    pass
+}
+
+generate_report() {
+    # TODO: Create HTML or text report
+    # TODO: Include all verification results
+    # TODO: Save to /var/log/hardening_report.txt
+    pass
+}
+
+main() {
+    echo "System Hardening Verification"
+    echo "=============================="
+    # TODO: Run all verification functions
+    # TODO: Generate and display report
+}
+
+main "$@"
+Step 2: Run Verification Tests
+Execute the verification script:
+
+chmod +x verify_hardening.sh
+sudo ./verify_hardening.sh
+Review the output and ensure all hardening measures are properly applied.
+
+Expected Outcomes
+After completing this lab, you should have:
+
+A collection of automated hardening scripts
+Configured firewall with UFW and iptables rules
+Hardened SSH configuration
+Secured user accounts and password policies
+File system security measures in place
+Verification scripts to test hardening effectiveness
+Troubleshooting Tips
+Issue: Script fails with permission denied
+
+Solution: Ensure you're running scripts with sudo or as root user
+Verify script has execute permissions with chmod +x script.sh
+Issue: UFW blocks SSH connection
+
+Solution: Always allow SSH before enabling UFW: sudo ufw allow 22/tcp
+Keep a backup connection open when testing firewall rules
+Issue: Services fail to restart after configuration
+
+Solution: Test configuration syntax before restarting (e.g., sshd -t for SSH)
+Check logs in /var/log/ for specific error messages
+Restore backup configuration files if needed
+Issue: AIDE initialization takes too long
+
+Solution: AIDE database initialization can take 10-30 minutes on first run
+Run in background or schedule during maintenance window
+Consider excluding large directories like /var/log from monitoring
+Conclusion
+This lab provided hands-on experience with Linux system hardening through automated Bash scripts. You created scripts to secure user accounts, configure firewalls, harden SSH, and protect the file system. These automation techniques are essential for maintaining consistent security postures across multiple systems in enterprise environments. Continue practicing by expanding these scripts with additional security measures and adapting them to specific organizational requirements.
