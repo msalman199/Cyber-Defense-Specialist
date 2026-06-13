@@ -1,0 +1,4 @@
+2024-01-15 10:30:15 TCP 192.168.1.100:1234 -> 10.0.0.5:445 SMB connection
+2024-01-15 10:31:22 DNS Query: malicious-domain.com
+2024-01-15 10:32:10 HTTP GET /payload.exe User-Agent: PowerShell
+2024-01-15 10:33:45 TCP 192.168.1.100:4444 -> 203.0.113.1:443 Reverse shell
