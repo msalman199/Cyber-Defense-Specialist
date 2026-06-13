@@ -1,0 +1,12 @@
+Return-Path: <alert@security-bank-verify.net>
+Received: from suspicious.example.com (suspicious.example.com [203.0.113.50])
+    by mx.victim.com with SMTP id XYZ789
+From: Bank Security <security@yourbank.com>
+Reply-To: noreply@security-bank-verify.net
+To: victim@victim.com
+Subject: URGENT: Verify Your Account Now
+Date: Tue, 16 Jan 2024 14:20:00 +0000
+X-Mailer: BulkMailer Pro
+X-Originating-IP: 203.0.113.50
+
+Your account will be suspended. Click here immediately to verify.
