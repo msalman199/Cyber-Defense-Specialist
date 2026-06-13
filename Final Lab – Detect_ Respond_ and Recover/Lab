@@ -1,0 +1,546 @@
+Final Lab – Detect, Respond, and Recover
+Objectives
+By the end of this lab, students will be able to:
+
+Deploy and configure security monitoring tools (Wazuh and Zeek)
+Develop Python scripts for automated log analysis and threat detection
+Simulate attack scenarios and identify security incidents
+Execute incident response procedures following industry best practices
+Document findings and create incident reports
+Prerequisites
+Basic Linux command-line operations
+Fundamental networking concepts (TCP/IP, ports, protocols)
+Basic Python programming (variables, loops, file I/O)
+Understanding of common cybersecurity threats
+Lab Environment
+Al Nafi Cloud Machine: Click Start Lab to access your pre-configured Ubuntu 22.04 LTS environment with 4GB RAM, internet connectivity, and sudo privileges.
+
+Task 1: Install and Configure Security Monitoring Tools
+Step 1.1: System Preparation
+Update system and install dependencies:
+
+# Update system packages
+sudo apt update && sudo apt upgrade -y
+
+# Install required dependencies
+sudo apt install -y curl wget gnupg python3 python3-pip git libpcap-dev
+
+# Install Python packages
+pip3 install pandas requests
+
+# Create lab directory structure
+mkdir -p ~/soc-lab/{logs,scripts,reports,evidence}
+cd ~/soc-lab
+Step 1.2: Install Wazuh Manager
+# Add Wazuh repository
+curl -s https://packages.wazuh.com/key/GPG-KEY-WAZUH | gpg --no-default-keyring --keyring gnupg-ring:/usr/share/keyrings/wazuh.gpg --import
+sudo chmod 644 /usr/share/keyrings/wazuh.gpg
+
+echo "deb [signed-by=/usr/share/keyrings/wazuh.gpg] https://packages.wazuh.com/4.x/apt/ stable main" | sudo tee /etc/apt/sources.list.d/wazuh.list
+
+# Install Wazuh
+sudo apt update
+sudo apt install -y wazuh-manager
+
+# Start Wazuh service
+sudo systemctl enable wazuh-manager
+sudo systemctl start wazuh-manager
+sudo systemctl status wazuh-manager
+Step 1.3: Configure Wazuh Monitoring
+Create custom configuration for enhanced monitoring:
+
+# Backup original configuration
+sudo cp /var/ossec/etc/ossec.conf /var/ossec/etc/ossec.conf.backup
+
+# Add log monitoring configuration
+sudo tee -a /var/ossec/etc/ossec.conf > /dev/null << 'EOF'
+<ossec_config>
+  <localfile>
+    <log_format>syslog</log_format>
+    <location>/var/log/auth.log</location>
+  </localfile>
+  <localfile>
+    <log_format>syslog</log_format>
+    <location>/var/log/syslog</location>
+  </localfile>
+</ossec_config>
+EOF
+
+# Restart Wazuh
+sudo systemctl restart wazuh-manager
+Step 1.4: Create Custom Detection Rules
+# Create custom rules for attack detection
+sudo tee /var/ossec/etc/rules/local_rules.xml > /dev/null << 'EOF'
+<group name="local,syslog,sshd,">
+  <rule id="100001" level="10">
+    <if_matched_sid>5716</if_matched_sid>
+    <description>SSH Brute Force Attack Detected</description>
+    <same_source_ip />
+    <frequency>5</frequency>
+    <timeframe>300</timeframe>
+  </rule>
+
+  <rule id="100002" level="12">
+    <if_group>syscheck</if_group>
+    <field name="file">/etc/passwd|/etc/shadow</field>
+    <description>Critical system file modified</description>
+  </rule>
+</group>
+EOF
+
+# Reload rules
+sudo systemctl restart wazuh-manager
+Step 1.5: Install Zeek Network Monitor
+# Add Zeek repository
+echo 'deb http://download.opensuse.org/repositories/security:/zeek/xUbuntu_22.04/ /' | sudo tee /etc/apt/sources.list.d/security:zeek.list
+
+curl -fsSL https://download.opensuse.org/repositories/security:zeek/xUbuntu_22.04/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/security_zeek.gpg > /dev/null
+
+# Install Zeek
+sudo apt update
+sudo apt install -y zeek
+
+# Add to PATH
+echo 'export PATH=/opt/zeek/bin:$PATH' >> ~/.bashrc
+source ~/.bashrc
+
+# Create log directory
+sudo mkdir -p /opt/zeek/logs
+sudo chmod 755 /opt/zeek/logs
+Task 2: Develop Log Analysis Scripts
+Step 2.1: Create Wazuh Log Analyzer
+Create a Python script to analyze Wazuh alerts:
+
+# Create script file
+cat > ~/soc-lab/scripts/wazuh_analyzer.py << 'EOF'
+#!/usr/bin/env python3
+"""
+Wazuh Log Analyzer - Analyzes security alerts from Wazuh
+Students: Complete the TODO sections to implement full functionality
+"""
+
+import json
+import os
+from datetime import datetime
+from collections import defaultdict
+
+class WazuhAnalyzer:
+    def __init__(self, log_file="/var/ossec/logs/alerts/alerts.json"):
+        self.log_file = log_file
+        self.alerts = []
+        self.stats = defaultdict(int)
+        
+    def load_alerts(self):
+        """
+        Load alerts from Wazuh JSON log file
+        TODO: Implement file reading and JSON parsing
+        TODO: Handle file not found errors
+        TODO: Store parsed alerts in self.alerts list
+        """
+        # TODO: Check if file exists
+        # TODO: Open and read file line by line
+        # TODO: Parse each line as JSON
+        # TODO: Append to self.alerts
+        pass
+    
+    def analyze_severity(self):
+        """
+        Analyze alert severity levels
+        TODO: Count alerts by severity level
+        TODO: Identify high-priority alerts (level >= 10)
+        TODO: Update self.stats dictionary
+        """
+        # TODO: Loop through self.alerts
+        # TODO: Extract severity level from each alert
+        # TODO: Count occurrences of each level
+        pass
+    
+    def detect_brute_force(self):
+        """
+        Detect brute force attack patterns
+        TODO: Group alerts by source IP
+        TODO: Count failed authentication attempts
+        TODO: Flag IPs with > 5 failures in 5 minutes
+        """
+        # TODO: Create dictionary to track IPs
+        # TODO: Filter authentication failure alerts
+        # TODO: Identify suspicious patterns
+        pass
+    
+    def generate_report(self):
+        """
+        Generate security analysis report
+        TODO: Create formatted report with statistics
+        TODO: Save report to file
+        TODO: Print summary to console
+        """
+        # TODO: Format report header
+        # TODO: Add statistics sections
+        # TODO: Write to reports directory
+        pass
+
+def main():
+    analyzer = WazuhAnalyzer()
+    # TODO: Call analyzer methods in correct order
+    # TODO: Handle errors appropriately
+
+if __name__ == "__main__":
+    main()
+EOF
+
+chmod +x ~/soc-lab/scripts/wazuh_analyzer.py
+Step 2.2: Create Zeek Traffic Analyzer
+cat > ~/soc-lab/scripts/zeek_analyzer.py << 'EOF'
+#!/usr/bin/env python3
+"""
+Zeek Network Traffic Analyzer
+Students: Complete the TODO sections
+"""
+
+import os
+from collections import Counter, defaultdict
+
+class ZeekAnalyzer:
+    def __init__(self, log_dir="/opt/zeek/logs"):
+        self.log_dir = log_dir
+        self.connections = []
+        self.suspicious_ips = []
+        
+    def load_conn_log(self):
+        """
+        Load connection log from Zeek
+        TODO: Read conn.log file
+        TODO: Parse tab-separated values
+        TODO: Store connection records
+        """
+        # TODO: Open conn.log file
+        # TODO: Skip comment lines (start with #)
+        # TODO: Parse each line into dictionary
+        pass
+    
+    def detect_port_scan(self):
+        """
+        Detect port scanning activity
+        TODO: Group connections by source IP
+        TODO: Count unique destination ports per IP
+        TODO: Flag IPs connecting to > 20 ports
+        """
+        # TODO: Create IP to ports mapping
+        # TODO: Count unique ports per IP
+        # TODO: Identify scanners
+        pass
+    
+    def analyze_traffic_volume(self):
+        """
+        Analyze traffic volume patterns
+        TODO: Calculate bytes transferred per connection
+        TODO: Identify large data transfers
+        TODO: Flag unusual traffic patterns
+        """
+        # TODO: Sum orig_bytes and resp_bytes
+        # TODO: Find connections > 10MB
+        # TODO: Report findings
+        pass
+    
+    def generate_report(self):
+        """
+        Generate network analysis report
+        TODO: Compile findings into report
+        TODO: Save to file
+        """
+        # TODO: Format report
+        # TODO: Include all analysis results
+        pass
+
+def main():
+    analyzer = ZeekAnalyzer()
+    # TODO: Implement analysis workflow
+
+if __name__ == "__main__":
+    main()
+EOF
+
+chmod +x ~/soc-lab/scripts/zeek_analyzer.py
+Step 2.3: Create Incident Response Script
+cat > ~/soc-lab/scripts/incident_response.py << 'EOF'
+#!/usr/bin/env python3
+"""
+Incident Response Automation
+Students: Complete the TODO sections
+"""
+
+import subprocess
+import datetime
+
+class IncidentResponder:
+    def __init__(self):
+        self.incident_log = []
+        
+    def block_ip(self, ip_address):
+        """
+        Block malicious IP using iptables
+        TODO: Validate IP address format
+        TODO: Execute iptables command
+        TODO: Log the action
+        """
+        # TODO: Check IP format
+        # TODO: Run: sudo iptables -A INPUT -s {ip} -j DROP
+        # TODO: Record action with timestamp
+        pass
+    
+    def collect_evidence(self, alert_data):
+        """
+        Collect evidence for incident
+        TODO: Save alert details to evidence directory
+        TODO: Capture system state (netstat, ps)
+        TODO: Create evidence package
+        """
+        # TODO: Create evidence file
+        # TODO: Run system commands to gather info
+        # TODO: Save all data
+        pass
+    
+    def create_incident_report(self, incident_type, details):
+        """
+        Create formal incident report
+        TODO: Format incident details
+        TODO: Include timeline
+        TODO: Add recommended actions
+        """
+        # TODO: Create report structure
+        # TODO: Add all relevant information
+        # TODO: Save to reports directory
+        pass
+
+def main():
+    responder = IncidentResponder()
+    # TODO: Implement incident response workflow
+
+if __name__ == "__main__":
+    main()
+EOF
+
+chmod +x ~/soc-lab/scripts/incident_response.py
+Task 3: Simulate Attack Scenarios
+Step 3.1: Generate SSH Brute Force Attack
+# Create attack simulation script
+cat > ~/soc-lab/attack-simulation/ssh_bruteforce.sh << 'EOF'
+#!/bin/bash
+# Simulate SSH brute force attack (for testing only)
+
+TARGET="localhost"
+ATTEMPTS=10
+
+echo "Simulating SSH brute force attack..."
+for i in $(seq 1 $ATTEMPTS); do
+    # Attempt login with invalid credentials
+    sshpass -p "wrongpassword" ssh -o StrictHostKeyChecking=no testuser@$TARGET 2>/dev/null
+    sleep 1
+done
+
+echo "Attack simulation complete. Check Wazuh alerts."
+EOF
+
+chmod +x ~/soc-lab/attack-simulation/ssh_bruteforce.sh
+Step 3.2: Generate Port Scan Activity
+cat > ~/soc-lab/attack-simulation/port_scan.sh << 'EOF'
+#!/bin/bash
+# Simulate port scanning activity
+
+TARGET="127.0.0.1"
+echo "Simulating port scan..."
+
+# Scan common ports
+for port in {20..100}; do
+    timeout 1 bash -c "echo >/dev/tcp/$TARGET/$port" 2>/dev/null && echo "Port $port open"
+done
+
+echo "Port scan simulation complete."
+EOF
+
+chmod +x ~/soc-lab/attack-simulation/port_scan.sh
+Step 3.3: Execute Attack Simulations
+# Run simulations (in separate terminal windows)
+cd ~/soc-lab/attack-simulation
+
+# Terminal 1: SSH brute force
+./ssh_bruteforce.sh
+
+# Terminal 2: Port scan
+./port_scan.sh
+
+# Wait 2-3 minutes for logs to populate
+sleep 180
+Task 4: Detect and Respond to Incidents
+Step 4.1: Run Log Analysis
+# Analyze Wazuh alerts
+python3 ~/soc-lab/scripts/wazuh_analyzer.py
+
+# Analyze Zeek network logs
+python3 ~/soc-lab/scripts/zeek_analyzer.py
+
+# Review generated reports
+ls -lh ~/soc-lab/reports/
+Step 4.2: Identify Security Incidents
+Review analysis output and identify:
+
+High-severity alerts (level 10+)
+Brute force attempts (multiple failed logins)
+Port scanning activity (connections to many ports)
+Suspicious IP addresses
+Document findings:
+
+# Create incident summary
+cat > ~/soc-lab/reports/incident_summary.txt << 'EOF'
+INCIDENT SUMMARY
+Date: [Current Date]
+Analyst: [Your Name]
+
+DETECTED INCIDENTS:
+1. [Incident Type]
+   - Source IP: [IP Address]
+   - Timestamp: [Time]
+   - Severity: [Level]
+   - Description: [Details]
+
+2. [Next Incident]
+   ...
+
+RECOMMENDED ACTIONS:
+- [Action 1]
+- [Action 2]
+EOF
+Step 4.3: Execute Response Actions
+Respond to identified threats:
+
+# Block malicious IP (example)
+sudo iptables -A INPUT -s 192.168.1.100 -j DROP
+
+# Verify block
+sudo iptables -L -n | grep 192.168.1.100
+
+# Save iptables rules
+sudo iptables-save > ~/soc-lab/evidence/iptables_backup.txt
+Step 4.4: Collect Evidence
+# Capture system state
+netstat -tuln > ~/soc-lab/evidence/netstat_output.txt
+ps aux > ~/soc-lab/evidence/process_list.txt
+last -20 > ~/soc-lab/evidence/login_history.txt
+
+# Copy relevant logs
+sudo cp /var/ossec/logs/alerts/alerts.json ~/soc-lab/evidence/
+sudo cp /opt/zeek/logs/conn.log ~/soc-lab/evidence/
+
+# Create evidence archive
+cd ~/soc-lab
+tar -czf evidence_$(date +%Y%m%d_%H%M%S).tar.gz evidence/
+Task 5: Recovery and Documentation
+Step 5.1: System Recovery
+# Check system integrity
+sudo /var/ossec/bin/rootcheck
+
+# Review file integrity
+sudo /var/ossec/bin/syscheck
+
+# Verify no unauthorized changes
+sudo find /etc -type f -mtime -1 -ls
+Step 5.2: Create Final Incident Report
+cat > ~/soc-lab/reports/final_incident_report.md << 'EOF'
+# INCIDENT RESPONSE REPORT
+
+## Executive Summary
+[Brief overview of incident]
+
+## Incident Details
+- **Date/Time**: [Timestamp]
+- **Incident Type**: [Type]
+- **Severity**: [Level]
+- **Affected Systems**: [Systems]
+
+## Detection
+- **Detection Method**: [How detected]
+- **Tools Used**: Wazuh, Zeek, Custom Scripts
+- **Key Indicators**: [IOCs]
+
+## Analysis
+[Detailed analysis of what happened]
+
+## Response Actions
+1. [Action taken]
+2. [Action taken]
+3. [Action taken]
+
+## Evidence Collected
+- [Evidence item 1]
+- [Evidence item 2]
+
+## Recovery Steps
+1. [Recovery action]
+2. [Recovery action]
+
+## Lessons Learned
+- [Lesson 1]
+- [Lesson 2]
+
+## Recommendations
+- [Recommendation 1]
+- [Recommendation 2]
+
+---
+Report prepared by: [Your Name]
+Date: [Current Date]
+EOF
+Step 5.3: Verify System Security
+# Check for remaining threats
+sudo /var/ossec/bin/agent_control -l
+
+# Review active connections
+netstat -tuln | grep ESTABLISHED
+
+# Verify firewall rules
+sudo iptables -L -n -v
+
+# Check for suspicious processes
+ps aux | grep -E 'suspicious|malware|backdoor'
+Expected Outcomes
+After completing this lab, you should have:
+
+Functional monitoring infrastructure with Wazuh and Zeek
+Custom analysis scripts for automated threat detection
+Documented security incidents with evidence
+Executed response actions to mitigate threats
+Comprehensive incident report following industry standards
+Restored system security with verification
+Troubleshooting Tips
+Wazuh not starting:
+
+Check logs: sudo tail -f /var/ossec/logs/ossec.log
+Verify configuration: sudo /var/ossec/bin/ossec-control status
+Restart service: sudo systemctl restart wazuh-manager
+No alerts generated:
+
+Ensure log files exist and are readable
+Check Wazuh is monitoring correct files
+Verify attack simulations executed successfully
+Wait 2-3 minutes for log processing
+Python script errors:
+
+Verify Python 3 is installed: python3 --version
+Check file permissions: ls -l ~/soc-lab/scripts/
+Install missing packages: pip3 install [package]
+Review error messages for specific issues
+Zeek not capturing traffic:
+
+Verify network interface: ip link show
+Check Zeek process: ps aux | grep zeek
+Review Zeek logs: tail -f /opt/zeek/logs/*.log
+Conclusion
+This comprehensive lab integrated multiple security tools to create a functional SOC workflow. You practiced detecting threats using Wazuh and Zeek, analyzing logs with custom Python scripts, responding to incidents following best practices, and documenting findings professionally. These skills are essential for security analysts and incident responders in real-world environments.
+
+Key Takeaways:
+
+Security monitoring requires multiple complementary tools
+Automated analysis improves detection speed and accuracy
+Proper documentation is critical for incident response
+Recovery verification ensures threats are fully mitigated
+Continuous monitoring is essential for maintaining security posture
